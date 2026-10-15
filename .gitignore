@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/audio/
+data/raw/audio/*
+!data/raw/audio/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+*.faiss
+*.index
+.ipynb_checkpoints/

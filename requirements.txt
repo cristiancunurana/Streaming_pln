@@ -1,0 +1,7 @@
+faster-whisper>=1.1,<2.0
+# faster-whisper 1.2.1 still passes a keyword removed in PyAV 19.
+av>=18,<19
+yt-dlp[default]>=2025.1.15,<2027
+stopwordsiso>=0.7,<1
+spacy>=3.8.11,<4
+sentence-transformers>=4.1,<6

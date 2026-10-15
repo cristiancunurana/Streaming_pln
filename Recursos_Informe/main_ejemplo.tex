@@ -1,0 +1,498 @@
+\documentclass[12pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% PREÁMBULO
+% ---------------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Español cauteloso: sin shorthands activas (evita redefiniciones de "-.,")
+\usepackage[spanish,es-noshorthands]{babel}
+
+\usepackage[a4paper, margin=2.3cm, top=2.2cm, bottom=2.2cm]{geometry}
+\usepackage{pdflscape} % Permite paginas apaisadas individuales sin romper la geometria global
+
+\usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.25}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{1.5em}
+\raggedbottom
+
+\usepackage{textcomp}
+\usepackage{enumitem}
+\setlist{leftmargin=1.5em, itemsep=2pt, topsep=3pt, parsep=0pt}
+
+\usepackage{graphicx}
+\graphicspath{{./}}
+
+% Colores de la propuesta
+\usepackage{xcolor}
+\definecolor{azulprin}{HTML}{1F3A5F}
+\definecolor{azulpetr}{HTML}{176B87}
+\definecolor{azulmed}{HTML}{2E86AB}
+\definecolor{azulclaro}{HTML}{5DADE2}
+\definecolor{azulpal}{HTML}{D6EAF8}
+\definecolor{grisdark}{HTML}{4D5863}
+\definecolor{grismed}{HTML}{B0BEC5}
+\definecolor{grislight}{HTML}{F2F4F6}
+\definecolor{verde}{HTML}{1E8449}
+
+% Cabeceras de página
+\usepackage{fancyhdr}
+\setlength{\headheight}{24pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{grisdark}\textbf{PLN I -- Memoria semántica del contenido hablado}}
+\fancyhead[R]{\small\color{grisdark}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\color{azulmed}\hrule width\headwidth height 0.4pt}
+
+% ---------------------------------------------------------------------------
+% Formato de secciones
+% ---------------------------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{azulprin}}
+  {\thesection.}{0.6em}
+  {}
+  [{\vspace{2pt}\color{azulmed}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{13pt}{8pt}
+
+% Figuras dentro de la página (no flotantes)
+\usepackage{caption}
+\captionsetup{font=small, labelfont={bf,color=azulprin}}
+
+% Cajas temáticas
+\usepackage[most]{tcolorbox}
+\newtcolorbox{cajapln}[1]{
+  enhanced,
+  colback=white,
+  colframe=azulprin,
+  boxrule=0.6pt,
+  arc=2pt,
+  outer arc=2pt,
+  colbacktitle=azulprin,
+  coltitle=white,
+  title={#1},
+  fonttitle=\bfseries\small,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before skip=4pt, after skip=4pt
+}
+\newtcolorbox{cajatitulo}{
+  enhanced,
+  colback=azulprin,
+  colframe=azulpetr,
+  boxrule=0.8pt,
+  arc=7pt,
+  outer arc=7pt,
+  left=10pt, right=10pt, top=10pt, bottom=10pt
+}
+\newtcolorbox{cajaresaltado}{
+  enhanced,
+  colback=azulpal!80,
+  colframe=azulprin,
+  boxrule=0.7pt,
+  arc=3pt,
+  outer arc=3pt,
+  left=6pt, right=6pt, top=5pt, bottom=5pt
+}
+
+% TikZ para los esquemas
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+
+\tikzset{
+  cajagrupo/.style={
+    draw=azulprin, fill=azulprin, text=white,
+    font=\footnotesize\bfseries, align=center,
+    rounded corners=2pt, inner xsep=4pt, inner ysep=3pt, line width=0.7pt
+  },
+  subbox/.style={
+    draw=azulpetr, fill=azulpal!85, text=grisdark, align=center,
+    font=\footnotesize, rounded corners=2pt,
+    inner xsep=3pt, inner ysep=2pt, line width=0.5pt
+  },
+  chip/.style={
+    draw=azulpetr!70, fill=white, text=grisdark, align=center,
+    font=\footnotesize, rounded corners=2pt,
+    inner xsep=4pt, inner ysep=2pt, line width=0.4pt
+  },
+  mombox/.style={
+    draw=azulprin, fill=azulpal!60, text=grisdark,
+    rounded corners=3pt, line width=0.9pt
+  },
+  flecha/.style={
+    -{Triangle[length=2.2mm,width=1.6mm]},
+    line width=0.7pt, draw=azulpetr
+  }
+}
+
+% Enlaces PDF
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulmed,
+  urlcolor=azulpetr,
+  pdfauthor={Cristian Junior Cunurana Calderon},
+  pdftitle={Sistema basado en herramientas de PLN para la construccion de la memoria semantica de contenido hablado}
+}
+
+% ---------------------------------------------------------------------------
+% PÁGINA 1: PORTADA
+% ---------------------------------------------------------------------------
+\begin{document}
+
+\begin{titlepage}
+  \thispagestyle{empty}
+  \centering
+
+  \includegraphics[height=3.4cm]{Logo_UNAP.png}\par
+  \vspace{0.55cm}
+
+  {\large\textbf{UNIVERSIDAD NACIONAL DEL ALTIPLANO}}\\[6pt]
+  {\large FACULTAD DE INGENIERÍA MECÁNICA ELÉCTRICA, ELECTRÓNICA Y SISTEMAS}\\[6pt]
+  {\large ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMAS}\par
+
+  \vspace{1.1cm}
+
+  \begin{cajatitulo}
+    {\color{white}\Large\textbf{Sistema basado en herramientas de Procesamiento de Lenguaje Natural para la construcción de la memoria semántica de contenido hablado, bajo demanda a través de lenguaje natural}}
+  \end{cajatitulo}\par
+
+  \vspace{1.0cm}
+
+  \begin{tabular}{@{}rl@{}}
+    \textbf{CURSO}                & : Procesamiento de Lenguaje Natural I\\
+    \textbf{DOCENTE}              & : ING. ALLCA MAMANI UBALDO\\
+    \textbf{ESTUDIANTE}           & : CRISTIAN JUNIOR CUNURANA CALDERON\\
+    \textbf{SEMESTRE ACADÉMICO}   & : IX\\
+    \textbf{GRUPO}                & : A\\
+  \end{tabular}
+
+  \vfill
+  {\large PUNO -- PERÚ}\\[8pt]
+  {\large\textbf{2026}}
+
+\end{titlepage}
+
+% ---------------------------------------------------------------------------
+% PÁGINA 2: PLANTEAMIENTO, OBJETIVOS, JUSTIFICACIÓN Y ESQUEMA GENERAL
+% ---------------------------------------------------------------------------
+\section{Título del Proyecto}
+Sistema basado en herramientas de \textbf{Procesamiento de Lenguaje Natural (PLN)} para la construcción de la \emph{memoria semántica} del contenido hablado de transmisiones de streaming, consultable en lenguaje natural bajo demanda.
+
+\section{Planteamiento del Problema}
+El contenido hablado generado en las transmisiones de streaming (audios y transcripciones) crece de forma continua y acelerada en plataformas como Twitch, YouTube o Kick. Los streamers emiten diariamente horas de discurso no estructurado que abarca opiniones sobre videojuegos, recomendaciones de productos, debates de actualidad, momentos de interacción directa con la audiencia y anécdotas personales. Localizar un dato específico dentro de este vasto archivo audiovisual exige escuchar manualmente extensos registros o revisar transcripciones crudas sin contextualizar, un proceso ineficiente, lento e impreciso.
+
+Esta dispersión de la información provoca la pérdida de conocimiento acumulado en las comunidades virtuales. El sistema propuesto busca resolver esta problemática capturando el flujo de voz transcrito, estructurándolo mediante técnicas avanzadas de PLN y almacenándolo en una memoria semántica persistente que permita la búsqueda semántica e interrogar al sistema usando lenguaje natural.
+
+\section{Problema General}
+\emph{¿Cómo recuperar, de forma ágil y precisa, información específica del contenido hablado de las transmisiones de streaming mediante consultas en lenguaje natural, apoyándose en herramientas de PLN?}
+
+\section{Objetivo General}
+Construir la memoria semántica del contenido hablado de transmisiones de streaming y permitir su consulta en lenguaje natural mediante herramientas de PLN.
+
+\section{Objetivos Específicos}
+\begin{enumerate}
+  \item Capturar la transcripción del contenido hablado junto con sus metadatos clave (ID del streamer, ID de la transmisión, fecha de emisión y marca temporal exacta).
+  \item Aplicar el preprocesamiento y las técnicas de PLN (reconocimiento de entidades nombradas, extracción de relaciones, análisis de polaridad/opiniones, resolución de referencias temporales y generación de embeddings dense vectors) sobre el texto.
+  \item Almacenar los datos estructurados en una memoria semántica persistente equipada con capacidades de búsqueda vectorial e indexado de metadatos.
+  \item Implementar un motor de consulta en lenguaje natural basado en la recuperación de fragmentos altamente relevantes ($Top\text{-}K$).
+  \item Desarrollar un prototipo de interfaz gráfica que devuelva respuestas sintéticas acompañadas de sus correspondientes citas con marcas de tiempo (timestamps).
+\end{enumerate}
+
+\section{Justificación e Impacto}
+La importancia de esta investigación radica en la transformación de datos no estructurados de audio continuo en conocimiento estructurado y accesible. Para las comunidades de espectadores, creadores de contenido, editores de video e investigadores de medios digitales, este sistema ofrece una herramienta de búsqueda inteligente capaz de responder preguntas complejas sin requerir revisión manual. Desde la perspectiva de la Ingeniería de Sistemas y el PLN, la propuesta valida la integración de arquitecturas de recuperación aumentada por generación (RAG) aplicadas a transmisiones en vivo.
+
+\section{Propuesta del Sistema y Esquema General}
+La propuesta se organiza en dos flujos complementarios:
+\begin{enumerate}
+  \item \textbf{Construcción de la memoria}: captura, limpia, procesa e indexa semánticamente las transcripciones (Figura~\ref{fig:construccion}).
+  \item \textbf{Consulta y recuperación}: procesa las preguntas de los usuarios y recupera las respuestas exactas con citas (Figura~\ref{fig:consulta}).
+\end{enumerate}
+
+\begin{cajaresaltado}
+  \centering
+  \small\textbf{ENTRADAS} $\rightarrow$ \textbf{PROCESOS} $\rightarrow$ \textbf{SUBPROCESOS} $\rightarrow$ \textbf{SALIDAS} $\rightarrow$ \textbf{MEMORIA SEMÁNTICA} $\rightarrow$ \textbf{CONSULTA} $\rightarrow$ \textbf{RECUPERACIÓN} $\rightarrow$ \textbf{RESPUESTA}
+\end{cajaresaltado}
+
+\clearpage
+
+% ---------------------------------------------------------------------------
+% PÁGINA 3 (APAISADA): FIGURA 1 - CONSTRUCCIÓN DE LA MEMORIA
+% ---------------------------------------------------------------------------
+\begin{landscape}
+\begin{center}
+{\color{azulprin}\Large\textbf{Esquema 1: Construcción de la Memoria Semántica}}\par
+\vspace{2pt}
+
+\begin{tikzpicture}[x=0.95cm, y=0.92cm]
+
+  % Cabeceras de columna
+  \node[cajagrupo, minimum width=5.6cm]  at (3.2,15.2)  {ENTRADAS};
+  \node[cajagrupo, minimum width=6.0cm]  at (10.0,15.2) {PREPROCESAMIENTO};
+  \node[cajagrupo, minimum width=6.4cm]  at (17.0,15.2) {PROCESAMIENTO PLN};
+  \node[cajagrupo, minimum width=6.6cm]  at (23.6,15.2) {DATOS GENERADOS (SALIDAS)};
+
+  % Columna 1: Entradas
+  \node[subbox, minimum width=4.6cm, text width=4.4cm] at (3.2,13.6)  {Transcripción del\\texto hablado};
+  \node[subbox, minimum width=4.6cm] at (3.2,12.4)  {ID del streamer};
+  \node[subbox, minimum width=4.6cm] at (3.2,11.2)  {ID de la transmisión};
+  \node[subbox, minimum width=4.6cm, text width=4.4cm] at (3.2,10.0)  {Fecha y marca\\temporal};
+
+  % Columna 2: Preprocesamiento
+  \node[subbox, minimum width=5.0cm] at (10.0,13.6) {Limpieza};
+  \node[subbox, minimum width=5.0cm] at (10.0,12.4) {Normalización};
+  \node[subbox, minimum width=5.0cm] at (10.0,11.2) {Segmentación};
+  \node[subbox, minimum width=5.0cm] at (10.0,10.0) {Tokenización};
+
+  % Columna 3: Procesamiento PLN
+  \node[subbox, minimum width=5.2cm] at (17.0,13.6) {NER: entidades};
+  \node[subbox, minimum width=5.2cm, text width=5.0cm] at (17.0,12.4) {Relaciones:\\vínculos};
+  \node[subbox, minimum width=5.2cm, text width=5.0cm] at (17.0,11.2) {Opiniones:\\polaridad};
+  \node[subbox, minimum width=5.2cm, text width=5.0cm] at (17.0,10.0) {Temporal:\\referencias};
+  \node[subbox, minimum width=5.2cm, text width=5.0cm] at (17.0,8.8)  {Embeddings:\\vectores};
+
+  % Columna 4: Datos generados
+  \node[subbox, minimum width=5.4cm] at (23.6,13.6) {Texto original};
+  \node[subbox, minimum width=5.4cm] at (23.6,12.5) {Fragmentos};
+  \node[subbox, minimum width=5.4cm] at (23.6,11.4) {Entidades};
+  \node[subbox, minimum width=5.4cm] at (23.6,10.3) {Relaciones};
+  \node[subbox, minimum width=5.4cm] at (23.6,9.2)  {Opiniones};
+  \node[subbox, minimum width=5.4cm, text width=5.2cm] at (23.6,8.1)  {Referencias\\temporales};
+  \node[subbox, minimum width=5.4cm] at (23.6,7.0)  {Embeddings};
+
+  % Flechas horizontales entre etapas
+  \draw[flecha] (6.0,12.4) -- (7.0,12.4);
+  \draw[flecha] (13.0,12.4) -- (14.0,12.4);
+  \draw[flecha] (20.0,12.4) -- (20.6,12.4);
+
+  % Flechas verticales hacia la memoria
+  \draw[flecha] (3.2,9.575)  -- (3.2,5.4);
+  \draw[flecha] (10.0,9.575) -- (10.0,5.4);
+  \draw[flecha] (17.0,8.4)   -- (17.0,5.4);
+  \draw[flecha] (23.6,6.65)  -- (23.6,5.4);
+
+  % Memoria semántica (almacén)
+  \draw[mombox] (0.4,1.8) rectangle (26.8,5.4);
+  \node[font=\small\bfseries, text=azulprin] at (13.6,4.72) {MEMORIA SEMÁNTICA (ALMACÉN DE CONTENIDO ESTRUCTURADO)};
+
+  % Fila A de datos almacenados
+  \node[chip] at (4.2,4.0)   {Texto original};
+  \node[chip] at (9.0,4.0)   {Fragmentos};
+  \node[chip] at (13.4,4.0)  {Entidades};
+  \node[chip] at (18.0,4.0)  {Relaciones};
+  \node[chip] at (22.4,4.0)  {Opiniones};
+
+  % Fila B de datos almacenados
+  \node[chip] at (4.2,3.3)   {Referencias temporales};
+  \node[chip] at (9.0,3.3)   {Embeddings};
+  \node[chip] at (13.4,3.3)  {ID del streamer};
+  \node[chip] at (18.0,3.3)  {ID de la transmisión};
+  \node[chip] at (22.4,3.3)  {Fecha y timestamp};
+
+  % Nota de salida
+  \node[font=\footnotesize, text=grisdark] at (13.6,2.35)
+    {SALIDA: memoria semántica construida y persistida, lista para responder consultas en lenguaje natural (Figura~\ref{fig:consulta}).};
+
+\end{tikzpicture}
+
+\vspace{2pt}
+\captionof{figure}{Arquitectura de construcción de la memoria semántica del contenido hablado. Fuente: elaboración propia.}\label{fig:construccion}
+\end{center}
+\end{landscape}
+
+% ---------------------------------------------------------------------------
+% PÁGINA 4 (APAISADA): FIGURA 2 - CONSULTA Y RECUPERACIÓN
+% ---------------------------------------------------------------------------
+\begin{landscape}
+\begin{center}
+{\color{azulprin}\Large\textbf{Esquema 2: Consulta en Lenguaje Natural y Recuperación}}\par
+\vspace{2pt}
+
+\begin{tikzpicture}[x=0.95cm, y=0.90cm]
+
+  % Cabeceras de columna
+  \node[cajagrupo, minimum width=4.4cm, text width=4.2cm] at (3.0,15.2)  {CONSULTA DEL USUARIO};
+  \node[cajagrupo, minimum width=4.4cm, text width=4.2cm] at (8.4,15.2)  {PROCESAMIENTO CON PLN};
+  \node[cajagrupo, minimum width=4.4cm, text width=4.2cm] at (13.8,15.2) {REPRESENTACIÓN SEMÁNTICA};
+  \node[cajagrupo, minimum width=4.4cm, text width=4.2cm] at (19.2,15.2) {RECUPERACIÓN};
+  \node[cajagrupo, minimum width=4.4cm, text width=4.2cm] at (24.6,15.2) {SALIDA};
+
+  % Columna 1: Consulta
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (3.0,12.6) {Pregunta en lenguaje natural};
+
+  % Columna 2: Procesamiento con PLN
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (8.4,13.4) {Entidades de la consulta (NER)};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (8.4,12.0) {Referencias temporales};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (8.4,10.6) {Embedding de la consulta};
+
+  % Columna 3: Representación semántica y búsqueda
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (13.8,13.4) {Representación semántica};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (13.8,12.0) {Búsqueda vectorial};
+
+  % Columna 4: Recuperación
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (19.2,13.4) {Cálculo de similitud};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (19.2,12.0) {Ranking de fragmentos};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (19.2,10.6) {Selección Top-K};
+
+  % Columna 5: Salida
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (24.6,13.4) {Contexto con los fragmentos};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (24.6,12.0) {Respuesta en lenguaje natural};
+  \node[subbox, minimum width=4.4cm, text width=4.2cm] at (24.6,10.6) {Cita: streamer, transmisión y timestamp};
+
+  % Flechas horizontales del pipeline
+  \draw[flecha] (5.2,12.0)  -- (6.2,12.0);
+  \draw[flecha] (10.6,12.0) -- (11.6,12.0);
+  \draw[flecha] (16.0,12.0) -- (17.0,12.0);
+  \draw[flecha] (21.4,12.0) -- (22.4,12.0);
+
+  % Memoria semántica consultada
+  \draw[mombox] (9.1,1.9) rectangle (18.5,4.7);
+  \node[font=\small\bfseries, text=azulprin] at (13.8,4.15)
+    {MEMORIA SEMÁNTICA};
+  \node[font=\footnotesize, text=grisdark, align=center, text width=8cm] at (13.8,3.25)
+    {Contenido construido en el Esquema 1};
+  \node[chip] at (13.8,2.35) {Embeddings y fragmentos};
+
+  % Consulta hacia la memoria
+  \draw[flecha] (13.8,10.6) -- (13.8,4.7);
+  \node[font=\footnotesize, text=grisdark, anchor=west] at (14.0,7.6)
+    {consulta representada};
+
+  % Regreso de fragmentos (Top-K)
+  \draw[flecha] (18.5,3.3) -- (19.2,3.3) -- (19.2,9.8);
+  \node[font=\footnotesize, text=grisdark, anchor=west] at (18.7,6.5)
+    {fragmentos Top-K};
+
+\end{tikzpicture}
+
+\vspace{2pt}
+\captionof{figure}{Flujo de consulta en lenguaje natural y recuperación de fragmentos desde la memoria semántica. Fuente: elaboración propia.}\label{fig:consulta}
+\end{center}
+\end{landscape}
+
+% ---------------------------------------------------------------------------
+% PÁGINA 5: ARQUITECTURA DE DATOS Y PIPELINE DE INGESTA
+% ---------------------------------------------------------------------------
+\section{Arquitectura de Datos y Representación del Contenido}
+La construcción de la memoria semántica requiere transformar un flujo de texto continuo desorganizado en nodos estructurados ricos en metadatos. Cada fragmento de audio transcrito no se procesa de forma aislada, sino como parte de un documento relacional indexado. La estructura mínima de cada entrada en la memoria semántica consta de los siguientes elementos:
+
+\begin{itemize}
+  \item \textbf{Cuerpo del Texto (Chunk):} Fragmento de transcripción recortado mediante ventanas deslizantes con superposición para preservar la continuidad semántica del discurso.
+  \item \textbf{Vector denso (Embedding):} Representación matemática multidimensional generada mediante modelos de lenguaje (como Sentence-BERT), que captura el significado subyacente más allá de las palabras clave explícitas.
+  \item \textbf{Entidades (NER):} Términos extraídos clasificados como videojuegos, marcas, eventos, personas o ubicaciones mencionadas por el streamer.
+  \item \textbf{Análisis de polaridad:} Puntuación que cuantifica el sentimiento u opinión expresada (positiva, negativa o neutra) respecto a una entidad.
+  \item \textbf{Metadatos de trazabilidad:} Identificador del canal/streamer, título del directo, fecha exacta de la emisión y marca de tiempo inicial y final ($HH:MM:SS$).
+\end{itemize}
+
+\section{Canal de Ingesta y Preprocesamiento}
+El audio proveniente de las plataformas de streaming se procesa a través de un canal optimizado de transcripción automática (ASR) utilizando modelos de estado del arte como \emph{Whisper}. El texto crudo resultante suele carecer de puntuación limpia y presenta muletillas recurrentes típicas del lenguaje oral improvisado. 
+
+Por ello, la fase de preprocesamiento ejecuta:
+\begin{enumerate}
+  \item \textbf{Normalización y Limpieza:} Eliminación de expresiones repetitivas, ruidos de fondo transcritos y corregimiento de puntuación semántica.
+  \item \textbf{Diarización y Segmentación:} Agrupación del texto en fragmentos coherentes según las pausas naturales del streamer, garantizando que cada fragmento mantenga unidad de sentido.
+\end{enumerate}
+
+\section{Casos de Uso para Transmisiones de Streaming}
+La aplicación práctica del sistema beneficia directamente a la dinamización del contenido de los streamers mediante diversos escenarios de uso:
+\begin{itemize}
+  \item \textbf{Búsqueda de opiniones y revisiones:} Un usuario puede consultar: \emph{``¿Qué opina el streamer X sobre el nuevo parche de Valorant?''} y obtener la respuesta exacta dada durante un directo de hace meses.
+  \item \textbf{Navegación por momentos destacados (Clips):} Permite a los editores de contenido localizar instantes específicos para la creación de resúmenes sin necesidad de revisar horas de retransmisión.
+  \item \textbf{Consultas recurrentes de la comunidad:} El sistema responde preguntas frecuentes del chat sobre configuraciones de hardware, horarios o proyectos del creador.
+\end{itemize}
+
+\section{Integración de Arquitecturas RAG (Retrieval-Augmented Generation)}
+El motor de búsqueda no se limita a recuperar coincidencia exacta de palabras, sino que utiliza una arquitectura RAG. Cuando el usuario realiza una pregunta, el sistema calcula la similitud entre la duda y la memoria semántica, selecciona los fragmentos con mayor coeficiente de similitud del espacio vectorial ($Top\text{-}K$) y formula una respuesta concisa citando explícitamente el origen del dato.
+
+
+% ---------------------------------------------------------------------------
+% PÁGINA 6: EJEMPLO, DATASET, EVALUACIÓN Y TECNOLOGÍAS
+% ---------------------------------------------------------------------------
+\begin{minipage}[t]{0.485\linewidth}
+
+  \begin{cajapln}{12. Ejemplo de consulta}
+    \textit{Consulta:} \emph{\guillemotleft ¿Qué opinó el streamer sobre la actualización del mapa durante la transmisión del viernes?\guillemotright}
+    \begin{itemize}
+      \item \textbf{PLN:} reconoce la entidad (\emph{el streamer}) y la referencia temporal (\emph{viernes}).
+      \item \textbf{Recuperación:} se genera el vector de la consulta y se seleccionan los tres fragmentos más similares ($Top\text{-}3$).
+      \item \textbf{Respuesta esperada:} \emph{``Sobre la actualización del mapa dijo que mejoró la visibilidad''}, transmisión del viernes, 21:43.
+    \end{itemize}
+  \end{cajapln}
+
+  \vspace{10pt}
+
+  \begin{cajapln}{13. Dataset y Fuentes}
+    \begin{itemize}
+      \item \textbf{Origen:} transcripciones propias y corpus demostrativos de sesiones de streaming en español (plataformas Twitch y YouTube).
+      \item \textbf{Etiquetas:} ID del streamer, ID de la transmisión, fecha y marca temporal ($timestamp$).
+      \item \textbf{Alcance:} corpus personal para validar la eficacia del prototipo; no requiere grandes conjuntos de datos externos ni datos propietarios.
+    \end{itemize}
+  \end{cajapln}
+
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\linewidth}
+
+  \begin{cajapln}{14. Métricas de Evaluación}
+    La evaluación del sistema se realiza mediante un conjunto de consultas controladas sobre el corpus:
+    \begin{itemize}
+      \item \textbf{Precisión@K y Recall@K:} mide la proporción de fragmentos relevantes devueltos dentro de los primeros $K$ resultados.
+      \item \textbf{Concordancia de cita:} verifica si la respuesta generada apunta al timestamp y fragmento correcto del video.
+      \item \textbf{Revisión cualitativa:} contraste manual del contenido del fragmento recuperado con la respuesta final sintetizada.
+    \end{itemize}
+  \end{cajapln}
+
+  \vspace{10pt}
+
+  \begin{cajapln}{15. Tecnologías Utilizadas}
+    \begin{itemize}
+      \item \textbf{Python}: lenguaje base para la implementación del pipeline de datos.
+      \item \textbf{spaCy / Transformers}: análisis lingüístico, NER y tokenización.
+      \item \textbf{Sentence-Transformers}: generación de embeddings semánticos densos.
+      \item \textbf{FAISS / Chroma / pgvector}: bases de datos vectoriales para almacenamiento y búsqueda rápida.
+      \item \textbf{FastAPI}: framework para exponer la interfaz de servicios web.
+      \item \textbf{Streamlit}: panel visual para interactuar con la memoria en tiempo real.
+    \end{itemize}
+  \end{cajapln}
+
+\end{minipage}
+
+\vspace{12pt}
+
+\section{Metodología de Desarrollo del Prototipo}
+Para garantizar una construcción incremental del proyecto, la metodología adoptada se divide en cuatro fases principales:
+\begin{enumerate}
+  \item \textbf{Fase de Recolección y Limpieza:} Descarga de audios de prueba, procesamiento mediante modelos ASR (Whisper) y formato de transcripciones con metadatos de tiempo.
+  \item \textbf{Fase de Construcción del Pipeline Vectorial:} Configuración de los modelos de representación de texto, chunkeo adaptativo e indexado dentro de la base de datos vectorial seleccionada.
+  \item \textbf{Fase de Implementación de Búsqueda:} Desarrollo de los algoritmos de consulta en lenguaje natural y filtrado por metadatos (fechas, creadores específicos).
+  \item \textbf{Fase de Interfaz y Validación:} Diseño de la aplicación interactiva Streamlit y ejecución de pruebas de usuario con preguntas sobre las transmisiones de prueba.
+\end{enumerate}
+
+
+% ---------------------------------------------------------------------------
+% PÁGINA 7: RESULTADO ESPERADO, TRABAJO FUTURO Y CONSIDERACIONES
+% ---------------------------------------------------------------------------
+\section{Resultado Esperado}
+Ante una consulta formulada en lenguaje natural, el sistema devuelve una respuesta clara y estructurada construida a partir de fragmentos reales de la memoria semántica. Cada respuesta incluye una cita verificable indicando el streamer, el título del directo, la fecha y el timestamp preciso de la intervención. 
+
+Es fundamental resaltar que el sistema opera exclusivamente bajo un modelo de recuperación acotado: \emph{recupera y organiza} información verídica contenida en su base de datos semántica, evitando alucinaciones o respuestas desconectadas del corpus real almacenado.
+
+\section{Trabajo Futuro y Líneas de Investigación}
+El desarrollo del prototipo plantea oportunidades de ampliación para futuras fases del proyecto de investigación:
+\begin{itemize}
+  \item \textbf{Ingesta en Tiempo Real:} Procesamiento directo de transmisiones en vivo mediante conexiones por websockets, actualizando la memoria semántica a medida que el streamer habla.
+  \item \textbf{Análisis Multimodal:} Integración de visión por computadora para correlacionar lo que el streamer dice con las imágenes proyectadas en pantalla (por ejemplo, reconocer la interfaz del videojuego o un evento visual).
+  \item \textbf{Análisis de Sentimiento del Chat:} Cruce de la memoria semántica del habla con la actividad del chat de espectadores en vivo para evaluar la reacción de la audiencia ante declaraciones específicas.
+\end{itemize}
+
+\section{Consideraciones Éticas y Privacidad}
+Dado que el proyecto trabaja con la voz transcrita de creadores de contenido públicos, el desarrollo cumple estrictamente con el principio de uso justo y académico del material. Todas las transcripciones utilizadas provienen de contenido de acceso público y las consultas generadas preservan la integridad de las opiniones originales de los streamers mediante la inclusión obligatoria de la cita original.
+
+\section{Conclusiones de la Propuesta}
+La propuesta demuestra la viabilidad técnica de construir memorias semánticas inteligentes aplicadas a medios digitales modernos. La integración de herramientas de PLN como la extracción de entidades, análisis de sentimiento y búsqueda vectorial transforma horas de transmisiones informales en una fuente de conocimiento totalmente interactiva y estructurada, resolviendo eficientemente la problemática de la dispersión de información en las plataformas de streaming.
+
+\end{document}
