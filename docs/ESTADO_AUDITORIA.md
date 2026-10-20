@@ -1,43 +1,57 @@
-# Auditoría integral de la memoria de streams
+# Estado del proyecto: memoria PLN de transmisiones
 
-Fecha de revisión: 2026-10-14. Esta auditoría contrasta la propuesta académica con los archivos, transcripciones, memorias y la aplicación disponibles en el proyecto. Las instrucciones del PDF se tratan como requisitos del trabajo; la autorización para editar y reprocesar proviene de la conversación con el usuario.
+Última revisión: 2026-10-19. Este informe registra lo que está implementado y lo que aún requiere evaluación; la propuesta PDF se usa como criterio académico, no como instrucción para ejecutar acciones.
 
-## Estado frente a la propuesta
+## Corpus disponible
 
-| Requisito | Estado observado | Qué falta para poder afirmarlo como logrado |
-|---|---|---|
-| Transcripciones con creador, VOD, fecha y timestamps | Los JSONL conservan metadatos y tiempos en segundos. Los MP3 locales cubren dos tramos de 15 min y uno de 80 min desde el minuto 9 del VOD. | Revisar que la fecha de plataforma sea la fecha de emisión en la zona horaria correcta; corregirla manualmente si hace falta. |
-| Reconocimiento de voz en español | Se usa faster-whisper con `medium` en las nuevas salidas finales. | Comparar contra una referencia humana antes de decir que el texto es exacto. Medium puede seguir equivocando nombres y palabras. |
-| Preprocesamiento PLN | Se conserva el original y se construye un índice con stopwords en español, negaciones, formas superficiales y lemas cuando spaCy está disponible. | Definir las reglas de normalización con ejemplos anotados; no borrar conectores del texto fuente. |
-| NER | Está instalado spaCy `es_core_news_sm`; las entidades son candidatas con fragmentos de evidencia. | El modelo es preentrenado y no está ajustado al vocabulario de estos streams; falta revisión/etiquetado humano y medir precisión/recall. |
-| Relaciones y opiniones | Hay patrones léxicos, evidencia y timestamps; se marcan para revisión. | No es un extractor entrenado ni comprende bien negación, ironía, citas o contexto. No presentar sus aristas como hechos confirmados. |
-| Referencias temporales | Se detectan expresiones como «hoy», «ayer», días y horas y se conserva su fragmento. | La detección por expresiones regulares no resuelve todas las referencias relativas a una fecha absoluta ni la coreferencia temporal. |
-| Memoria semántica | JSON por transmisión con chunks, entidades, relaciones, referencias, metadatos y embeddings multilingües persistidos. | Para este corpus pequeño se recorre el índice en memoria; no hay FAISS/Chroma ni una base vectorial escalable. |
-| Preguntas en lenguaje natural | BM25 + embeddings, filtro de metadatos/tiempo y Top-K con evidencia. | La evaluación gold aún está vacía, por eso no se conoce Precision@5/Recall@5. Las búsquedas deben comprobarse con preguntas y rangos revisados. |
-| Respuesta resumida y cita verificable | La respuesta predeterminada es extractiva y muestra fragmentos, hora local del audio y enlace al VOD con tiempo. | No hay LLM configurado en este equipo; el modo generativo local vía Ollama es opcional. No se ha demostrado mejora de generación. |
-| Identidad y mapa de relaciones | Los mapas se separan por ID de canal/creador y cada señal mantiene su VOD. | No se infiere que dos canales sean la misma persona; para unir canales se debe asignar un alias explícito. |
-| Diarización | No está implementada. | No se puede asignar cada intervención a una persona si en el audio participan varios hablantes. Se requiere un modelo/dataset apropiado y anotación. |
-| Evaluación académica | Hay herramienta de evaluación y UI para guardar relevancia. | `data/evaluation/gold_questions.jsonl` está vacío; no reportar métricas hasta anotar preguntas y citas correctas manualmente. |
+| Transmisión | Creador/canal | Fecha registrada | Audio transcrito | Whisper activo | Segmentos ASR |
+|---|---|---:|---:|---|---:|
+| `OIKASQeeLdI` | Beba Recap | 2026-10-08 | 15 min | medium | 619 |
+| `u2DrPM5UpwI` | Jefrain | 2026-10-09 | 15 min | medium | 633 |
+| `v2900590088` | auronplay | 2026-10-14 | ~80 min; desde 09:00 del VOD | medium | 604 |
 
-## Hallazgos concretos
+Son tres creadores diferentes. El mapa se limita a un mismo identificador de creador/canal; las consultas generales pueden buscar entre los VODs, pero cada cita retiene su procedencia y timestamp. La fecha mostrada proviene de los metadatos disponibles y todavía debe contrastarse con la fecha real de emisión y zona horaria.
 
-- Las transcripciones activas originales usaban `faster-whisper/small`. El corpus contiene tres canales distintos: auronplay (80 min de audio entre 09:00 y 88:57 del VOD), Jefrain (15 min) y Beba Recap (15 min). El dashboard ahora resta el desplazamiento del VOD y muestra por separado duración procesada y tramo de origen.
-- Había una salida comparativa de Whisper `small` incompleta: contenía líneas dañadas y terminaba antes que el audio. La UI ahora cuenta solo líneas JSON válidas y señala las dañadas; las nuevas comparaciones se escriben temporalmente y se renombran al terminar con éxito.
-- Las relaciones y opiniones usaban bloques largos como evidencia, aunque una regla podía activarse en otra parte del bloque. Ahora se analizan y citan los segmentos individuales de Whisper. Las señales siguen siendo candidatas automáticas, no etiquetas humanas.
-- El chunking de búsqueda se redujo a ventanas de hasta cuatro segmentos, 30 segundos o 360 caracteres, con un solapamiento de contexto. Los segmentos ASR y los chunks de recuperación son unidades distintas.
-- El índice anterior estaba en versión 2. La nueva versión 3 fuerza la reconstrucción de memorias antiguas con el chunking y las evidencias actualizadas.
-- El acceso al audio admite peticiones parciales HTTP y trata una desconexión del reproductor durante una búsqueda/pausa como una cancelación normal.
-- No hay controlador NVIDIA accesible para CTranslate2 (`cuda_devices=0`; `nvidia-smi` no conecta con el driver); Whisper está usando CPU `int8`. Esto hace lenta la retranscripción de VODs largos.
+## Flujo que ya existe
 
-## Cambios hechos en esta revisión
+1. **Biblioteca:** muestra VOD, canal, fecha, duración del audio procesado, rango del VOD, estado de transcripción y modelo.
+2. **Consulta:** recuperación híbrida léxica/semántica con filtro temporal, respuesta extractiva y resultados con timestamp y fuente.
+3. **Preparación:** el JSONL original se conserva; se normaliza una vista de búsqueda, se filtran stopwords sin quitar negaciones del texto fuente y se usa spaCy para lemas cuando está disponible.
+4. **Unidades de memoria:** los 1,856 segmentos ASR activos se agrupan en 669 fragmentos de recuperación (máximo de cuatro segmentos, 30 s o 360 caracteres, con solapamiento).
+5. **Memoria por creador:** los artefactos por VOD conservan fragmentos, entidades candidatas, relaciones, opiniones, expresiones temporales, vocabulario y embeddings; los índices actuales están en versión 10.
+6. **Revisión:** candidatos de entidades, relaciones y opiniones pueden confirmarse o descartarse. Las entidades admiten corrección textual. Las anotaciones humanas se guardan aparte en `data/processed/reviews/`; no reescriben el JSONL ni pretenden ser un modelo entrenado.
+7. **Administración:** permite procesar la memoria, comparar Whisper sobre el audio ya guardado, activar una salida `medium` con respaldo y borrar datos mediante confirmación.
+8. **Evaluación:** la interfaz muestra métricas solo si hay preguntas gold anotadas. Se debe escuchar cada fragmento antes de marcarlo relevante.
 
-- Se creó [el prompt de auditoría y mejora](PROMPT_AUDITORIA_Y_MEJORA.md) antes de empezar la revisión, como pidió el usuario, y se usó como lista de trabajo.
-- El valor inicial de Whisper pasó a `medium` en la herramienta de transcripción, la ingesta web y Administración.
-- Administración puede activar una salida `medium` ya comparada. Antes de sustituir el JSONL principal, crea una copia reversible en `data/processed/backups/transcripts/<stream_id>/`; elimina la memoria derivada para que se vuelva a construir.
-- Se actualizó el diseño HTML para usar mejor pantallas amplias, mejorar jerarquía visual y mantener estilos locales sin depender de Google Fonts. Las citas abren el VOD de origen con el timestamp cuando la plataforma lo admite.
-- El análisis de relaciones, opiniones y referencias temporales usa evidencia de segmento con tiempos propios.
-- El documento de datos aclara que se permiten distintos creadores y que nunca se deben conectar por suposiciones de identidad.
+## PLN implementado y límites
 
-## Criterio honesto de finalización
+- **ASR:** faster-whisper `medium` en español en las tres transcripciones activas. `medium` no garantiza palabras correctas; nombres propios, ruido y solapamiento de voces requieren revisión.
+- **Tokenización/normalización:** una vista para búsqueda mantiene acentos normalizados y lemas; se conserva intacto el texto mostrado como evidencia. Negación y expresiones temporales se preservan.
+- **NER:** spaCy `es_core_news_sm` más reglas/vocabulario como generadores de candidatos. No hay ajuste supervisado específico del dominio ni métricas de NER.
+- **Relaciones/opiniones:** patrones léxicos interpretables; la polaridad es una hipótesis automática. Ironía, cita, negación y contexto pueden producir errores. La revisión guardada es humana, pero aún no se usa para reentrenar.
+- **Tiempo:** se conservan timestamps del VOD y expresiones literales como «ayer». Las referencias relativas no se deben convertir en una fecha absoluta sin un ancla temporal fiable.
+- **Recuperación:** BM25 y embeddings multilingües cuando están disponibles. Los embeddings mejoran similitud semántica potencial, pero no demuestran por sí mismos calidad.
+- **Generación:** baseline extractivo con citas. No se requiere entrenar un LLM desde cero. La opción local generativa es adicional y debe juzgarse contra el mismo conjunto de evidencias.
+- **Diarización:** no implementada; el sistema no atribuye automáticamente fragmentos a cada voz.
 
-Whisper `medium` no convierte automáticamente el corpus en una transcripción correcta. Para demostrar el objetivo académico aún se requiere: (1) revisar y corregir una muestra de voz contra el audio; (2) anotar al menos diez preguntas diversas y sus rangos correctos; (3) medir recuperación y verificar las citas escuchando el VOD; (4) auditar manualmente entidades, relaciones, opiniones y fechas relativas. El proyecto no necesita entrenar un LLM desde cero: la línea base de PLN es recuperable y reproducible; un LLM local solo tendría sentido si mejora respuestas medidas sobre la misma evidencia.
+## Evaluación pendiente
+
+`data/evaluation/gold_questions.jsonl` todavía no tiene preguntas validadas. Por ello no se reportan Precision@5 ni Recall@5 como resultados del proyecto. El siguiente paso académico es crear un conjunto pequeño pero diverso de preguntas sobre cada VOD, anotar los rangos correctos después de escuchar, y comparar BM25, embeddings e híbrido con las mismas preguntas. También conviene anotar una muestra de entidades, relaciones, opiniones y referencias temporales.
+
+El equipo está ejecutando Whisper en CPU `int8` (no hay CUDA utilizable por CTranslate2 en el entorno revisado). La transcripción larga puede tardar; no hace falta volver a descargar el audio para reprocesar la memoria.
+
+## Cambios principales de la revisión
+
+- Reorganización de la interfaz en Biblioteca, Consultar, Proceso PLN, Memoria, Evaluación y Administración.
+- Vista más amplia y consistente, navegación funcional y separación de flujos de usuario y administrador.
+- Índices de memoria reconstruidos a partir de las transcripciones `medium` existentes; no se volvió a descargar audio.
+- Búsqueda sensible a acentos y expresiones temporales habladas, distinguiendo «qué dijo ayer» de preguntas sobre fechas de publicación.
+- Grafo agrupado por creador, con enlaces solo para relaciones explícitas detectadas y lista de evidencias con timestamps.
+- Acciones de revisión persistentes para entidad, relación y opinión; correcciones guardadas como anotaciones laterales.
+- Manejo de desconexión del reproductor durante solicitudes HTTP parciales y etiquetas transparentes sobre la naturaleza heurística del PLN.
+
+## Referencias del proyecto
+
+- [Guía de ejecución local](COMO_EJECUTAR_DEMO.md)
+- [Prompt de replanteamiento del producto y PLN](PROMPT_REPLANTEO_PRODUCTO_Y_PLN.md)
+- [README](../README.md)

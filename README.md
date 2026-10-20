@@ -77,11 +77,11 @@ Para probar solo 15 minutos de un VOD largo, agrega `--start-sec 1800 --duration
 
 1. Ingesta de transcripción JSONL y metadatos JSON.
 2. Normalización ligera para búsqueda (minúsculas y tildes), preservando el texto original.
-3. Eliminación de stopwords en español con Stopwords ISO, manteniendo negaciones como «no» y «nunca».
-4. Segmentación de hasta cinco líneas o 42 segundos por fragmento, conservando sus tiempos.
+3. Filtrado de stopwords solo en la representación de búsqueda; negaciones, expresiones temporales y acciones se conservan para no perder intención. El conteo temático usa una lista distinta.
+4. Segmentación de búsqueda en ventanas solapadas de hasta cuatro segmentos Whisper, 30 segundos o 360 caracteres, con tiempos del VOD. Los segmentos ASR y los fragmentos PLN son unidades diferentes.
 5. Extracción de entidades con NER en español y patrones revisables para relaciones, opiniones y expresiones temporales.
 6. Embeddings densos con `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; si el paquete o el modelo no está disponible, la memoria registra el motivo y el buscador conserva BM25.
-7. Recuperación híbrida Top-K: BM25 + similitud de coseno normalizada. La pregunta puede filtrar fechas explícitas, días de semana o minutos del VOD.
+7. Recuperación híbrida Top-K: BM25 + similitud de coseno normalizada cuando hay vectores. Distingue fechas de emisión de expresiones temporales mencionadas en el habla; admite filtros de fecha y minuto.
 8. Síntesis extractiva con citas por defecto; generación RAG opcional con un LLM local vía Ollama y el contexto limitado a los resultados.
 9. **Procesar datos** guarda la memoria, vectores y trazabilidad en `data/processed/memory/`. No modifica el JSONL original.
 10. La interfaz muestra las etapas, entidades, opiniones, expresiones temporales, relaciones y evidencia en su timestamp.
@@ -89,9 +89,9 @@ Para probar solo 15 minutos de un VOD largo, agrega `--start-sec 1800 --duration
 
 Para activar el modelo NER español de spaCy en tu entorno virtual, instala los requisitos y luego ejecuta `python -m spacy download es_core_news_sm`. El procesamiento lo detecta automáticamente. Si todavía no está instalado, usa una heurística local y vocabulario conocido; las entidades candidatas y relaciones se deben revisar. Las relaciones se extraen con patrones de texto en esta primera versión, no con un modelo entrenado. No entrenamos una IA desde cero.
 
-El preprocesamiento solo quita stopwords en el campo de análisis (`search_text`) y conteos. Cada fragmento conserva su transcripción íntegra y los segundos de inicio y fin. Las negaciones se mantienen para no cambiar el sentido.
+El preprocesamiento conserva la transcripción original. La búsqueda normaliza mayúsculas y tildes y filtra conectores frecuentes; mantiene negaciones, acciones y expresiones temporales. El conteo del vocabulario temático usa otro filtro y excluye negación/tiempo solo para contar, nunca para buscar o citar.
 
-La sección **Explorar** es la vista de consulta. **Administración** es una herramienta local para agregar enlaces, comparar transcripciones generadas por distintos tamaños de Whisper usando el MP3 guardado y activar una salida revisada como texto principal. Antes de activarla, se guarda el JSONL actual bajo `data/processed/backups/transcripts/` y se invalida la memoria derivada. Los experimentos quedan bajo `data/processed/model_runs/`.
+La aplicación tiene vistas separadas para **Biblioteca**, **Consultar**, **Proceso PLN**, **Memoria**, **Evaluación** y **Administración**. En Administración se agregan enlaces y se gestionan comparaciones de Whisper. Crear una comparación reutiliza el MP3 guardado; activar una salida revisada guarda primero la transcripción vigente bajo `data/processed/backups/transcripts/` e invalida la memoria para reconstruirla. Los experimentos quedan bajo `data/processed/model_runs/`. Una comparación sin transcripción humana de referencia solo permite inspeccionar salidas; no mide por sí misma precisión de Whisper.
 
 Whisper es el modelo de reconocimiento de voz: convierte audio en texto. `tiny`, `base`, `small`, `medium` y `large-v3` ofrecen distintos compromisos entre velocidad y calidad. BM25 es el buscador textual de esta línea base. Para evaluar Whisper, compara sus salidas del mismo MP3 con una transcripción corregida manualmente; para medir la búsqueda, prepara preguntas y fragmentos relevantes, y calcula Precision@K o Recall@K. La limpieza de stopwords ayuda a visualizar y buscar términos; no corrige errores de Whisper.
 
@@ -111,14 +111,15 @@ docs/           # decisiones y evaluación del proyecto
 
 ## Orden de trabajo
 
-- [ ] Elegir un tema y 2 o 3 transmisiones candidatas.
-- [ ] Guardar sus transcripciones con tiempos y completar el registro en `data/README.md`.
+- [x] Crear un corpus de tres transmisiones con metadatos y tiempos; los VODs actuales pertenecen a tres creadores distintos y se mantienen separados en la memoria.
+- [ ] Decidir si el estudio compara varios creadores o si se acota a un dominio temático común; justificar el criterio de muestreo en el informe.
 - [x] Validar el formato de entrada y construir fragmentos con trazabilidad.
 - [x] Probar NER en español sobre esos fragmentos (spaCy opcional con fallback de candidatos).
 - [x] Construir memoria PLN por transmisión y revisar relaciones en un grafo con evidencia temporal.
 - [x] Comparar BM25 con embeddings multilingües y búsqueda híbrida.
 - [x] Crear el esquema de preguntas de evaluación y el cálculo de Precision@K y Recall@K; falta anotar las preguntas con el corpus real.
 - [x] Crear una interfaz HTML con reproductor, dashboard y citas con timestamps.
+- [x] Añadir vistas de biblioteca, consulta, proceso PLN, memoria, evaluación y administración, además de anotaciones humanas separadas para candidatos.
 - [x] Añadir soporte opcional de respuestas generativas locales acotadas a fragmentos citados; requiere Ollama configurado para activarse.
 
 ## Criterio de éxito del prototipo
@@ -127,5 +128,5 @@ Para cada pregunta de evaluación, el sistema debe devolver entre los primeros r
 
 ## Entorno
 
-La primera línea base usa Python estándar y BM25, sin bajar modelos de embeddings. Esto permite medir la recuperación sobre el corpus pequeño antes de elegir e instalar un modelo semántico.
+La línea base local combina BM25 con vectores de `paraphrase-multilingual-MiniLM-L12-v2` cuando están disponibles. El proyecto no entrena un LLM ni el NER con el corpus propio; relaciones, opiniones y algunas entidades son señales automáticas pendientes de revisión humana.
 # Streaming_pln

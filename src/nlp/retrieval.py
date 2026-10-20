@@ -5,9 +5,20 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
-from src.nlp.process_memory import STOPWORDS, TOKEN_RE, FILLER_WORDS, TEMPORAL_WORDS, SEARCH_ACTION_WORDS, TEMPORAL_RE
+from src.nlp.text import (
+    FILLER_WORDS,
+    FILLER_WORDS_NORMALIZED,
+    SEARCH_ACTION_WORDS,
+    TEMPORAL_RE,
+    TEMPORAL_WORDS_NORMALIZED,
+    SEARCH_STOPWORDS_NORMALIZED,
+    TOKEN_RE,
+    extract_dates,
+    normalize,
+)
 
 EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 _encoder = None
@@ -17,8 +28,8 @@ _query_nlp_loaded = False
 
 
 def tokenize(text: str) -> list[str]:
-    return [word for word in (token.casefold() for token in TOKEN_RE.findall(text))
-            if word not in STOPWORDS and word not in FILLER_WORDS]
+    return [word for word in (normalize(token) for token in TOKEN_RE.findall(text))
+            if word not in SEARCH_STOPWORDS_NORMALIZED and word not in FILLER_WORDS_NORMALIZED]
 
 
 def _load_query_nlp():
@@ -43,9 +54,9 @@ def _lemmas(text: str) -> list[str]:
     nlp = _load_query_nlp()
     if nlp is None:
         return []
-    return [token.lemma_.casefold() for token in nlp(text)
+    return [normalize(token.lemma_) for token in nlp(text)
             if token.is_alpha and len(token.lemma_) > 1
-            and (token.lemma_.casefold() not in STOPWORDS or token.text.casefold() in TEMPORAL_WORDS
+            and (normalize(token.lemma_) not in SEARCH_STOPWORDS_NORMALIZED or normalize(token.text) in TEMPORAL_WORDS_NORMALIZED
                  or token.lemma_.casefold() in SEARCH_ACTION_WORDS)]
 
 
@@ -92,9 +103,9 @@ def _bm25_scores(question: str, chunks: list[dict]) -> list[float]:
     nlp = _load_query_nlp() if missing_indexes else None
     if nlp is not None:
         for index, doc in zip(missing_indexes, nlp.pipe([str(chunks[i].get("text", "")) for i in missing_indexes], batch_size=64)):
-            document_lemmas[index] = " ".join(token.lemma_.casefold() for token in doc
+            document_lemmas[index] = " ".join(normalize(token.lemma_) for token in doc
                 if token.is_alpha and len(token.lemma_) > 1
-                and (token.lemma_.casefold() not in STOPWORDS or token.text.casefold() in TEMPORAL_WORDS
+                and (normalize(token.lemma_) not in SEARCH_STOPWORDS_NORMALIZED or normalize(token.text) in TEMPORAL_WORDS_NORMALIZED
                      or token.lemma_.casefold() in SEARCH_ACTION_WORDS))
     docs = []
     for index, chunk in enumerate(chunks):
@@ -173,13 +184,37 @@ def rank_chunks(question: str, chunks: list[dict], vectors: list[list[float]] | 
 
 
 def query_entities(question: str) -> list[dict]:
+    """Entidades de la pregunta con las mismas reglas de limpieza que la memoria."""
     try:
         nlp = _load_query_nlp()
+        from src.nlp.process_memory import KNOWN_TERMS
         if nlp is None:
-            return []
+            folded = question.casefold()
+            return [
+                {"text": term, "label": label, "source": "vocabulario PLN revisable"}
+                for term, label in KNOWN_TERMS.items()
+                if re.search(rf"(?<!\w){re.escape(term)}(?!\w)", folded)
+            ]
         doc = nlp(question)
-        return [{"text": entity.text, "label": entity.label_}
-                for entity in doc.ents if entity.label_ in {"PER", "PERSON", "ORG", "LOC", "GPE", "PRODUCT", "WORK_OF_ART"}]
+        allowed = {"PER": "PERSON", "PERSON": "PERSON", "ORG": "ORG", "LOC": "PLACE", "GPE": "PLACE",
+                   "PRODUCT": "WORK", "WORK_OF_ART": "WORK", "EVENT": "EVENT", "FAC": "PLACE"}
+        from src.nlp.text import NOISE_WORDS
+        results = []
+        for entity in doc.ents:
+            label = allowed.get(entity.label_)
+            if not label:
+                continue
+            text = entity.text.strip(" .,!?¿¡:;\"'")
+            label = KNOWN_TERMS.get(text.casefold(), label)
+            tokens = [token for token in entity if token.is_alpha]
+            if not tokens or any(token.pos_ not in {"PROPN", "NOUN"} for token in tokens):
+                continue
+            if any(token.lemma_.casefold() in NOISE_WORDS or token.text.casefold() in NOISE_WORDS for token in tokens):
+                continue
+            if len(tokens) == 1 and tokens[0].pos_ != "PROPN":
+                continue
+            results.append({"text": text, "label": label, "source": f"spaCy · {entity.label_}"})
+        return results
     except ImportError:
         return []
 
@@ -202,6 +237,16 @@ def temporal_filter(question: str, chunks: list[dict]) -> tuple[list[dict], str 
             wanted_date = None
     asks_emission_date = bool(re.search(r"\b(transmisi[oó]n|vod|video|directo|emisi[oó]n|publicad[oa]|fecha del canal)\b", folded))
     if not wanted_date and asks_emission_date:
+        full_dates = [value for value in extract_dates(question)
+                      if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", value)]
+        wanted_date = full_dates[0] if full_dates else None
+        month_day = next((value[-5:] for value in extract_dates(question) if value.startswith("--")), None)
+        if not wanted_date and month_day:
+            filtered = [chunk for chunk in chunks if str(chunk.get("date", ""))[-5:] == month_day]
+            if filtered:
+                return filtered, f"Fecha de emisión: {month_day} (año no especificado)"
+            return [], f"No hay transmisión con fecha {month_day}"
+    if not wanted_date and asks_emission_date:
         relative_day = None
         if re.search(r"\b(hoy)\b", folded):
             relative_day = 0
@@ -210,7 +255,8 @@ def temporal_filter(question: str, chunks: list[dict]) -> tuple[list[dict], str 
         elif re.search(r"\b(mañana)\b", folded):
             relative_day = 1
         if relative_day is not None:
-            wanted_date = (date.today() + timedelta(days=relative_day)).isoformat()
+            lima_today = datetime.now(ZoneInfo("America/Lima")).date()
+            wanted_date = (lima_today + timedelta(days=relative_day)).isoformat()
     if not wanted_date and asks_emission_date:
         for weekday, number in WEEKDAYS.items():
             if re.search(rf"\b{weekday}\b", folded):
@@ -238,8 +284,30 @@ def temporal_filter(question: str, chunks: list[dict]) -> tuple[list[dict], str 
         if filtered:
             return filtered, f"Alrededor del minuto {minute.group(1)}"
         return [], f"No hay fragmentos alrededor del minuto {minute.group(1)}"
+    # A phrase such as «qué dijo ayer» refers to words in the speech, not the
+    # publication date of the VOD. Restrict retrieval to matching speech spans
+    # and their adjacent short windows; do not silently reinterpret it as a date.
     spoken_temporal = {match.group(0).casefold() for match in TEMPORAL_RE.finditer(question)}
-    if spoken_temporal and any(any(term in str(chunk.get("text", "")).casefold() for term in spoken_temporal)
-                               for chunk in chunks):
-        return chunks, f"Referencia temporal buscada en el habla: {', '.join(sorted(spoken_temporal))}"
+    spoken_dates = set(extract_dates(question))
+    if spoken_temporal or spoken_dates:
+        matched = []
+        for chunk in chunks:
+            text = str(chunk.get("text", "")).casefold()
+            terms = {str(term).casefold() for term in chunk.get("temporal_terms", [])}
+            date_matches = set(extract_dates(text))
+            date_match = any(
+                candidate in date_matches
+                or (candidate.startswith("--") and any(value.endswith(candidate[1:]) for value in date_matches))
+                for candidate in spoken_dates
+            )
+            if (spoken_temporal & terms or any(term in text for term in spoken_temporal) or date_match):
+                matched.append(chunk)
+        if matched:
+            matched_ids = {id(chunk) for chunk in matched}
+            indexes = [index for index, chunk in enumerate(chunks) if id(chunk) in matched_ids]
+            neighborhood = sorted({nearby for index in indexes for nearby in (index - 1, index, index + 1)
+                                   if 0 <= nearby < len(chunks)})
+            selected = [chunks[index] for index in neighborhood]
+            details = [*sorted(spoken_temporal), *sorted(spoken_dates)]
+            return selected, f"Expresión temporal encontrada en el habla: {', '.join(details)}"
     return chunks, None

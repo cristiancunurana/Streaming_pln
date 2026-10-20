@@ -8,66 +8,74 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from src.nlp.creators import creator_key, creator_name
+from src.nlp.text import (
+    CONTENT_STOPWORDS,
+    CONTENT_STOPWORDS_NORMALIZED,
+    FILLER_WORDS,
+    NOISE_WORDS,
+    SEARCH_ACTION_WORDS,
+    SENTENCE_RE,
+    STOPWORDS,
+    STOPWORDS_ONLY_NORMALIZED,
+    TEMPORAL_RE,
+    TEMPORAL_WORDS,
+    TOKEN_RE,
+    content_tokens,
+    date_tokens,
+    extract_dates,
+    normalize,
+    search_terms,
+    search_tokens,
+)
 
+# Sube cuando cambia el índice o la estructura; obliga a reconstruir memorias.
+SEARCH_INDEX_VERSION = 10
 
-_STOPWORDS_FALLBACK = set("a al algo algunas algunos ante antes como con contra cual cuando de del desde donde dos el ella ellas ellos en entre era eres es esa esas ese eso esas este esto estos estoy fue fueron ha hasta hay la las le les lo los mas más me mi mis mucha muchas mucho muchos muy no nos o os otra otras otro otros para pero poco por porque que quien quienes se ser si sin sobre su sus te tiene tienen todo todos tu tus un una uno unas unos y ya también entonces aquí ahi así pues".split())
-try:
-    import stopwordsiso
-
-    STOPWORDS = set(stopwordsiso.stopwords("es"))
-except ImportError:
-    STOPWORDS = _STOPWORDS_FALLBACK
-STOPWORDS.difference_update({"no", "nunca", "jamás", "jamas", "tampoco", "mas", "más", "muy", "si", "sí"})
-TEMPORAL_WORDS = {
-    "hoy", "ayer", "mañana", "anoche", "ahora", "antes", "después", "despues",
-    "semana", "mes", "año", "ano", "día", "dia", "lunes", "martes", "miércoles",
-    "miercoles", "jueves", "viernes", "sábado", "sabado", "domingo", "pasado", "pasada",
-    "próximo", "proxima", "próxima", "proximo", "hace", "durante",
-}
-SEARCH_ACTION_WORDS = {"decir", "hacer", "hablar", "contar", "mencionar", "comentar", "anunciar", "opinar", "pensar", "jugar", "recomendar", "pasar"}
-STOPWORDS.difference_update(TEMPORAL_WORDS | SEARCH_ACTION_WORDS)
-FILLER_WORDS = {"eh", "mmm", "osea", "aja", "ajam", "digamos"}
-TOKEN_RE = re.compile(r"[a-záéíóúüñ0-9]+", re.IGNORECASE)
-SENTENCE_RE = re.compile(r"(?<=[.!?¿])\s+|\n+")
+# Vocabulario de dominio revisable. Ayuda a que el NER no dependa solo del
+# modelo genérico en nombres de juegos, plataformas y personas del corpus.
 KNOWN_TERMS = {
+    # Videojuegos / obras
     "valorant": "WORK", "minecraft": "WORK", "fortnite": "WORK", "league of legends": "WORK",
-    "lol": "WORK", "dota": "WORK", "dota 2": "WORK", "twitch": "ORG", "youtube": "ORG",
-    "kick": "ORG", "armys": "ORG", "sidereal": "PER", "perú": "LOC",
-    "lima": "LOC", "chile": "LOC", "argentina": "LOC",
+    "lol": "WORK", "dota": "WORK", "dota 2": "WORK", "roblox": "WORK", "gta": "WORK",
+    "grand theft auto": "WORK", "among us": "WORK", "counter strike": "WORK",
+    # Plataformas y comunidades
+    "twitch": "ORG", "youtube": "ORG", "kick": "ORG", "discord": "ORG", "whatsapp": "ORG",
+    "telegram": "ORG", "instagram": "ORG", "tiktok": "ORG", "google": "ORG", "wikipedia": "ORG",
+    "spotify": "ORG", "twitter": "ORG", "facebook": "ORG",
+    "armys": "ORG", "army": "ORG", "bts": "ORG", "kpop": "ORG", "sideral": "ORG", "sidereal": "ORG",
+    # Personas y lugares del corpus
+    "auronplay": "PERSON", "fabiana sevillano": "PERSON", "fabiana": "PERSON",
+    "pereira": "PERSON", "agustín": "PERSON", "agustin": "PERSON", "jefrain": "PERSON",
+    "perú": "LOC", "lima": "LOC", "chile": "LOC", "argentina": "LOC", "madrid": "LOC",
+    "barcelona": "LOC", "colombia": "LOC", "brasil": "LOC",
 }
 RELATION_PATTERNS = [
-    ("recomienda", re.compile(r"\b(recomiendo|recomienda|recomendaría|les recomiendo)\b", re.I)),
-    ("critica", re.compile(r"\b(odio|detesto|no me gusta|es malo|está mal|terrible|horrible|critico|critica)\b", re.I)),
-    ("aprueba", re.compile(r"\b(me gusta|me encanta|está bueno|es bueno|excelente|buenísimo|amo)\b", re.I)),
-    ("juega", re.compile(r"\b(juego|jugamos|jugando|jugar|partida de)\b", re.I)),
-    ("habla_sobre", re.compile(r"\b(habla de|hablando de|mencionó|menciona|dijo de|comentó sobre)\b", re.I)),
+    ("recomienda", re.compile(r"\b(recomiendo|recomienda|recomendaría|les recomiendo|recomendado|deberían probar)\b", re.I)),
+    ("critica", re.compile(r"\b(odio|detesto|no me gusta|no me gustó|es malo|está mal|está horrible|terrible|horrible|una porquería|un desastre|critico|critica)\b", re.I)),
+    ("aprueba", re.compile(r"\b(me gusta|me gustó|me encanta|me encantó|está bueno|es bueno|excelente|buenísimo|buenísima|amo|increíble|es un crack)\b", re.I)),
+    ("juega", re.compile(r"\b(juego|jugamos|jugando|jugar|partida de|estoy jugando|vamos a jugar)\b", re.I)),
+    ("habla_sobre", re.compile(r"\b(habla de|hablando de|habló de|mencionó|menciona|dijo de|comentó sobre|se refirió a|trata de)\b", re.I)),
 ]
 OPINION_PATTERNS = [
-    ("negativa", re.compile(r"\b(no me gusta|no me gustó|no me encanta|no me encantó|no es bueno|no está bueno|odio|detesto|horrible|terrible|es malo|está mal|malo|mala|aburrido|aburrida)\b", re.I)),
-    ("positiva", re.compile(r"\b((?<!no )me gusta|(?<!no )me gustó|(?<!no )me encanta|(?<!no )me encantó|amo|excelente|buenísimo|buenísima|es bueno|está bueno|chévere)\b", re.I)),
+    ("negativa", re.compile(r"\b(no me gusta|no me gustó|no me encanta|no me encantó|no es bueno|no está bueno|no sirve|odio|detesto|horrible|terrible|asqueroso|asquerosa|una porquería|un desastre|es malo|está mal|malísimo|malísima|aburrido|aburrida|me decepcionó)\b", re.I)),
+    ("positiva", re.compile(r"\b(me gusta|me gustó|me encanta|me encantó|amo|excelente|buenísimo|buenísima|es bueno|está bueno|está genial|está increíble|increíble|una belleza|un crack|vale la pena|chévere|me fascina)\b", re.I)),
 ]
-TEMPORAL_RE = re.compile(r"\b(hoy|ayer|mañana|anoche|ahora|esta semana|la semana pasada|la próxima semana|el próximo mes|el mes pasado|hace (?:un|una|\d+|dos|tres|cuatro|cinco) (?:días?|semanas?|meses?|años?)|el (?:lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|en 20\d{2}|a las \d{1,2}(?::\d{2})?)\b", re.I)
-GENERIC_SPOKEN_SPANS = {"ah", "aja", "ajá", "asi", "así", "bueno", "claro", "chevere", "creci", "crecí", "de verdad", "estoy", "gaaaaa", "gracias", "gente", "hola", "muchisimas", "muchísimas", "mira", "no me gusta", "oye", "papi", "para que día", "para qué día", "que tal", "qué tal", "si", "sí", "solo", "todo", "vale", "verdad", "vamos", "wow", "ya", "yo", "regala", "regalo", "tranquilo", "tranquila", "pico", "papá", "papa"}
+GENERIC_SPOKEN_SPANS = NOISE_WORDS | {
+    "asi", "así", "chevere", "creci", "crecí", "de verdad", "estoy", "gaaaaa",
+    "muchisimas", "muchísimas", "no me gusta", "papi", "para que día", "para qué día",
+    "que tal", "qué tal", "solo", "verdad", "regala", "regalo", "tranquilo", "tranquila",
+    "pico", "papá", "papa",
+}
 
 
+# Se conservan los nombres internos como alias del módulo compartido text.py.
 def _tokens(text: str) -> list[str]:
-    words = [word.casefold() for word in TOKEN_RE.findall(text)]
-    return [word for word in words if word not in STOPWORDS and word not in FILLER_WORDS]
+    return search_tokens(text)
 
 
 def _search_terms(text: str, doc=None) -> list[str]:
-    """Index surface forms and Spanish lemmas, keeping time and intent words."""
-    surface = _tokens(text)
-    lemmas = []
-    if doc is not None:
-        for token in doc:
-            if not token.is_alpha:
-                continue
-            lemma = token.lemma_.casefold().strip()
-            word = token.text.casefold()
-            if len(lemma) > 1 and (lemma not in STOPWORDS or word in TEMPORAL_WORDS or lemma in SEARCH_ACTION_WORDS):
-                lemmas.append(lemma)
-    return list(dict.fromkeys(surface + lemmas))
+    """Formas superficiales + lemas en español (ver src/nlp/text.py)."""
+    return search_terms(text, doc)
 
 
 def _ner_model():
@@ -85,36 +93,49 @@ def _ner_model():
 
 
 def _entities(text: str, nlp, streamer: str, doc=None) -> list[dict]:
-    found: dict[str, tuple[str, str]] = {}
+    found: dict[str, tuple[str, str, str]] = {}
     normalized = text.casefold()
     for term, label in KNOWN_TERMS.items():
         if re.search(rf"(?<!\w){re.escape(term)}(?!\w)", normalized):
-            found[term] = (term, label)
+            found[term] = (term, label, "vocabulario PLN revisable")
 
     if nlp:
         doc = doc if doc is not None else nlp(text)
         for ent in doc.ents:
-            label = {"PER": "PERSON", "PERSON": "PERSON", "ORG": "ORG", "LOC": "PLACE", "GPE": "PLACE", "PRODUCT": "WORK", "WORK_OF_ART": "WORK", "EVENT": "EVENT", "FAC": "PLACE"}.get(ent.label_)
+            label = {"PER": "PERSON", "PERSON": "PERSON", "ORG": "ORG", "LOC": "PLACE", "GPE": "PLACE",
+                     "PRODUCT": "WORK", "WORK_OF_ART": "WORK", "EVENT": "EVENT", "FAC": "PLACE"}.get(ent.label_)
+            if not label:  # MISC y etiquetas fuera de alcance
+                continue
             phrase = " ".join(ent.text.split()).strip(" .,!?¿¡:;()[]{}\"'“”")
             phrase_key = phrase.casefold()
-            words = phrase_key.split()
-            if not label or len(phrase) < 2 or not words or phrase_key in GENERIC_SPOKEN_SPANS:
+            if len(phrase) < 2 or not phrase_key or phrase_key in GENERIC_SPOKEN_SPANS:
                 continue
-            # Reject spans where the small model swallowed spoken clauses as a name.
-            if any(char in phrase for char in "¿?¡!.,;:"):
+            if any(char in phrase for char in "¿?¡!.,;:") or any(char.isdigit() for char in phrase):
                 continue
-            if any(word in FILLER_WORDS for word in words) or words[0] in STOPWORDS:
-                continue
-            # Small Spanish models often tag sentence openings and short interjections
-            # as names. For one-word spans, keep only proper nouns or curated terms.
             alpha_tokens = [token for token in ent if token.is_alpha]
-            if len(alpha_tokens) != len(ent) or any(token.pos_ != "PROPN" for token in alpha_tokens):
+            if not alpha_tokens or len(alpha_tokens) != len(ent):
                 continue
-            if phrase_key in GENERIC_SPOKEN_SPANS:
+            # Regla 1: interjecciones, muletillas y vocativos nunca son entidades.
+            if any(token.lemma_.casefold() in NOISE_WORDS or token.text.casefold() in NOISE_WORDS
+                   for token in alpha_tokens):
                 continue
-            if any(char.isdigit() for char in phrase):
+            # Regla 2: cada token debe ser nombre propio o sustantivo real; se
+            # permiten nexos internos («Universidad de Lima»), no al inicio/fin.
+            content_pos = {"PROPN", "NOUN"}
+            if any(token.pos_ not in content_pos for token in (alpha_tokens[0], alpha_tokens[-1])):
                 continue
-            found.setdefault(phrase_key, (phrase, label))
+            if any(token.pos_ not in content_pos | {"ADP", "CCONJ", "DET"}
+                   for token in alpha_tokens[1:-1]):
+                continue
+            # Regla 3: una entidad de una sola palabra debe ser nombre propio real
+            # (evita «bajón», «terracotta», conjugaciones sueltas, etc.).
+            if len(alpha_tokens) == 1 and alpha_tokens[0].pos_ != "PROPN":
+                continue
+            # Regla 4: un span repetido («wow wow») es ruido, no un nombre.
+            lemmas = [token.lemma_.casefold() for token in alpha_tokens]
+            if len(set(lemmas)) != len(lemmas):
+                continue
+            found.setdefault(phrase_key, (phrase, label, f"spaCy · {ent.label_}"))
     else:
         # Conservative proper-name heuristic. These are candidates for review, not model certainty.
         for match in re.finditer(r"(?<![.!?])\b(?:[A-ZÁÉÍÓÚÑ][\wáéíóúñ-]*)(?:\s+[A-ZÁÉÍÓÚÑ][\wáéíóúñ-]*){0,2}", text):
@@ -127,13 +148,16 @@ def _entities(text: str, nlp, streamer: str, doc=None) -> list[dict]:
             if len(words) == 1 and phrase not in KNOWN_TERMS and not (phrase.isupper() and len(phrase) >= 2):
                 continue
             generic_openers = {"ya", "ah", "si", "no", "pero", "bueno", "gente", "claro", "vamos", "entonces", "verdad", "gracias", "quiero", "mira", "ponte", "ahi", "porque", "todo", "muchas", "hola", "saludos"}
-            if phrase.casefold() in generic_openers or any(word.casefold() in STOPWORDS or word.casefold() in FILLER_WORDS for word in words):
+            if phrase.casefold() in generic_openers or phrase.casefold() in NOISE_WORDS:
                 continue
-            found.setdefault(phrase.casefold(), (phrase, "CANDIDATE"))
+            if any(word.casefold() in STOPWORDS or word.casefold() in FILLER_WORDS for word in words):
+                continue
+            found.setdefault(phrase.casefold(), (phrase, "CANDIDATE", "heurística local de nombres"))
 
     if streamer:
-        found[streamer.casefold()] = (streamer, "STREAMER")
-    return [{"id": key, "name": value[0], "label": value[1]} for key, value in sorted(found.items(), key=lambda item: item[0])]
+        found[streamer.casefold()] = (streamer, "STREAMER", "metadato del canal")
+    return [{"id": key, "name": value[0], "label": value[1], "source": value[2]}
+            for key, value in sorted(found.items(), key=lambda item: item[0])]
 
 
 def _clean_transcript(segments: list[dict]) -> dict:
@@ -143,17 +167,58 @@ def _clean_transcript(segments: list[dict]) -> dict:
     for row in segments:
         text = " ".join(str(row.get("text", "")).split())
         raw_tokens = [word.casefold() for word in TOKEN_RE.findall(text)]
-        kept = [word for word in raw_tokens if word not in STOPWORDS and word not in FILLER_WORDS]
-        removed.extend(word for word in raw_tokens if word in STOPWORDS or word in FILLER_WORDS)
+        kept = content_tokens(text)
+        removed.extend(word for word in raw_tokens
+                       if normalize(word) in CONTENT_STOPWORDS_NORMALIZED or (len(word) == 1 and not word.isdigit()))
         all_tokens.extend(kept)
         previews.append({
             "start_sec": float(row.get("start_sec", 0) or 0),
             "end_sec": float(row.get("end_sec", row.get("start_sec", 0)) or 0),
             "original": text,
-            "search_text": " ".join(kept),
-            "removed": [word for word in raw_tokens if word in STOPWORDS or word in FILLER_WORDS],
+            "search_text": " ".join(search_tokens(text) + date_tokens(text)),
+            "terms": kept,
+            "removed": [word for word in raw_tokens if normalize(word) in CONTENT_STOPWORDS_NORMALIZED],
+            "dates": extract_dates(text),
         })
-    return {"segments": previews, "term_frequency": Counter(all_tokens).most_common(100), "removed_count": len(removed), "removed_examples": removed[:100]}
+    return {"segments": previews, "term_frequency": Counter(all_tokens).most_common(100),
+            "removed_count": len(removed), "removed_examples": removed[:100]}
+
+
+def _word_counter(segments: list[dict]) -> dict:
+    """Contador de palabras y riqueza léxica sobre el texto completo.
+
+    Se cuentan solo palabras de contenido: las palabras vacías, las muletillas y
+    los cuantificadores no inflan el vocabulario. Las fechas se conservan aparte
+    para que eliminar stopwords no rompa una fecha.
+    """
+    total_tokens = 0
+    content: list[str] = []
+    stopwords_removed = 0
+    fillers_removed = 0
+    content_excluded = 0
+    dates: list[str] = []
+    for row in segments:
+        text = " ".join(str(row.get("text", "")).split())
+        raw_tokens = [word.casefold() for word in TOKEN_RE.findall(text)]
+        total_tokens += len(raw_tokens)
+        content.extend(content_tokens(text))
+        stopwords_removed += sum(1 for word in raw_tokens if normalize(word) in STOPWORDS_ONLY_NORMALIZED)
+        fillers_removed += sum(1 for word in raw_tokens if word in FILLER_WORDS)
+        content_excluded += sum(1 for word in raw_tokens if normalize(word) in CONTENT_STOPWORDS_NORMALIZED)
+        dates.extend(extract_dates(text))
+    unique = len(set(content))
+    return {
+        "total_words": total_tokens,
+        "content_words": len(content),
+        "unique_content_words": unique,
+        "lexical_diversity": round(unique / len(content), 3) if content else 0.0,
+        "stopwords_removed": stopwords_removed,
+        "fillers_removed": fillers_removed,
+        "content_excluded": content_excluded,
+        "dates": list(dict.fromkeys(dates)),
+        "top_content_terms": [{"term": term, "count": count} for term, count in Counter(content).most_common(20)],
+        "content_frequencies": dict(Counter(content)),
+    }
 
 
 def _chunks(segments: list[dict], metadata: dict) -> list[dict]:
@@ -218,14 +283,15 @@ def _relations(chunks: list[dict], nlp, streamer: str) -> list[dict]:
                             continue
                         seen.add(key)
                         results.append({"subject": subject, "predicate": predicate, "object": target["name"], "object_id": target["id"], "object_label": target["label"],
-                                        "confidence": 0.62 if nlp else 0.45, "review_status": "needs_review", "evidence": sentence,
+                                        "method": "patrón léxico explícito", "review_status": "needs_review", "evidence": sentence,
                                         "start_sec": span["start_sec"], "end_sec": span["end_sec"], "stream_id": chunk["stream_id"],
                                         "date": chunk["date"], "title": chunk["title"]})
     return results
 
 
-def _opinion_candidates(chunks: list[dict], streamer: str) -> list[dict]:
+def _opinion_candidates(chunks: list[dict], streamer: str, nlp=None) -> list[dict]:
     opinions = []
+    seen = set()
     for chunk in chunks:
         spans = chunk.get("segments") or [{"text": chunk["text"], "start_sec": chunk["start_sec"], "end_sec": chunk["end_sec"]}]
         for span in spans:
@@ -233,22 +299,28 @@ def _opinion_candidates(chunks: list[dict], streamer: str) -> list[dict]:
                 sentence = sentence.strip()
                 if not sentence:
                     continue
-                targets = [entity for entity in _entities(sentence, None, "")]
                 matches = [(polarity, pattern.search(sentence)) for polarity, pattern in OPINION_PATTERNS]
                 matches = [(polarity, match) for polarity, match in matches if match]
-                for polarity, cue in matches:
-                    for target in targets:
-                        if not re.search(rf"(?<!\w){re.escape(target['name'])}(?!\w)", sentence, re.I):
-                            continue
-                        opinions.append({
-                            "subject": streamer or "streamer (sin identificar)",
-                            "target": target["name"], "target_id": target["id"], "polarity": polarity,
-                            "cue": cue.group(0), "evidence": sentence,
-                            "start_sec": span["start_sec"],
-                            "end_sec": span["end_sec"],
-                            "stream_id": chunk["stream_id"], "date": chunk["date"], "title": chunk["title"],
-                            "review_status": "needs_review",
-                        })
+                if not matches:
+                    continue
+                # Las entidades se buscan con el modelo NER real, no con la heurística.
+                targets = [entity for entity in _entities(sentence, nlp, "") if entity["label"] != "STREAMER"]
+                polarity, cue = matches[0]
+                target_rows = targets or [{"name": "el tema tratado", "id": "tema", "label": "TEMA"}]
+                for target in target_rows:
+                    key = (chunk["stream_id"], span["start_sec"], polarity, target["id"])
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    opinions.append({
+                        "subject": streamer or "streamer (sin identificar)",
+                        "target": target["name"], "target_id": target["id"], "polarity": polarity,
+                        "cue": cue.group(0), "evidence": sentence,
+                        "start_sec": span["start_sec"],
+                        "end_sec": span["end_sec"],
+                        "stream_id": chunk["stream_id"], "date": chunk["date"], "title": chunk["title"],
+                        "review_status": "needs_review",
+                    })
     return opinions
 
 
@@ -290,7 +362,7 @@ def process_memory(stream_id: str, segments: list[dict], metadata: dict, output_
         if progress and (index % 10 == 0 or index + 1 == len(chunks)):
             progress(f"Detectando entidades: {index + 1}/{len(chunks)} fragmentos", 20 + int(30 * (index + 1) / max(1, len(chunks))))
     relations = _relations(chunks, model, str(metadata.get("channel_name", "")))
-    opinions = _opinion_candidates(chunks, str(metadata.get("channel_name", "")))
+    opinions = _opinion_candidates(chunks, str(metadata.get("channel_name", "")), model)
     temporal_references = _temporal_references(chunks)
     if progress:
         progress("Extrayendo opiniones, relaciones y referencias temporales", 58)
@@ -302,6 +374,7 @@ def process_memory(stream_id: str, segments: list[dict], metadata: dict, output_
     if progress:
         progress("Generando embeddings semánticos" if vectors is not None else "Embeddings no disponibles; se conservará la búsqueda BM25", 88 if vectors is not None else 80)
     cleaned_transcript = _clean_transcript(segments)
+    word_counter = _word_counter(segments)
     term_frequency = cleaned_transcript["term_frequency"]
     top_term_weights = dict(term_frequency[:20])
     key_fragments = sorted(
@@ -310,19 +383,22 @@ def process_memory(stream_id: str, segments: list[dict], metadata: dict, output_
         reverse=True,
     )[:5]
     memory = {
-        "schema_version": 3,
-        "search_index_version": 3,
+        "schema_version": 4,
+        "search_index_version": SEARCH_INDEX_VERSION,
         "stream": {key: metadata.get(key) for key in ("stream_id", "streamer_id", "channel_name", "title", "date", "source_url", "platform", "audio_offset_sec")},
         "creator": {"key": creator_key({**metadata, "stream_id": stream_id}), "name": creator_name(metadata)},
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "processing": {"ner_model": model_name, "relation_method": "solo patrones explícitos; co-ocurrencias no se consideran relaciones", "stopwords_language": "es",
-                       "preserves_source_transcript": True, "keeps_negations": True,
+        "processing": {"ner_model": model_name, "relation_method": "solo patrones explícitos; co-ocurrencias no se consideran relaciones",
+                       "stopwords_language": "es", "stopwords_categories": "vacías, muletillas, negación, grado y tiempo separadas",
+                       "preserves_source_transcript": True, "keeps_negations": True, "protects_dates": True,
+                       "lemmatization": "spaCy es_core_news cuando está disponible",
                        "embeddings": {"status": embedding_status, "model": EMBEDDING_MODEL_NAME, "error": embedding_error}},
         "preprocessing": cleaned_transcript,
+        "word_counter": word_counter,
         "interpretation": {
             "method": "lectura extractiva basada en frecuencia y fragmentos; sin LLM",
             "notice": "Los términos frecuentes orientan la lectura, pero no equivalen por sí solos a temas ni a una interpretación humana.",
-            "frequent_terms": [{"term": term, "count": count} for term, count in term_frequency[:12]],
+            "frequent_terms": word_counter["top_content_terms"][:12],
             "key_fragments": key_fragments,
         },
         "chunks": chunks,

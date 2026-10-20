@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import math
 import mimetypes
 import re
 import shutil
@@ -20,56 +19,71 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from src.nlp.process_memory import process_memory, _chunks as make_memory_chunks
+from src.nlp.process_memory import process_memory, _chunks as make_memory_chunks, SEARCH_INDEX_VERSION
 from src.nlp.creators import creator_key, creator_name
 from src.nlp.retrieval import query_entities, rank_chunks as rank_hybrid_chunks, temporal_filter
 from src.nlp.generation import generate_answer
+from src.nlp.answer import compose_answer
+from src.nlp.text import (
+    TOKEN_RE,
+    content_tokens,
+    extract_dates,
+    normalize,
+    search_tokens,
+    SEARCH_STOPWORDS_NORMALIZED,
+    search_terms,
+)
 from src.nlp.evaluate_retrieval import evaluate as evaluate_retrieval_questions
 
 RAW = ROOT / "data" / "raw"
 MEMORY = ROOT / "data" / "processed" / "memory"
+REVIEWS = ROOT / "data" / "processed" / "reviews"
 INDEX = ROOT / "src" / "app" / "index.html"
 PIPELINE = ROOT / "src" / "ingest" / "process_vod.py"
 PORT = 8501
 JOBS: dict[str, dict] = {}
 JOBS_LOCK = threading.Lock()
 
-STOPWORDS = set("""
-a al algo algunas algunos ante antes como con contra cual cuando de del desde donde dos el ella ellas ellos en entre era erais eran eras eres es esa esas ese eso esos esta estaba estaban estado estas este esto estos estoy están está fue fueron ha hasta hay la las le les lo los mas más me mi mis mucha muchas mucho muchos muy no nos o os otra otras otro otros para pero poco por porque que quien quienes se ser si sin sobre su sus te tiene tienen todo todos tu tus un una uno unas unos y ya también entonces aquí ahi así esto este esta esos estamos las pues
-""".split())
-
-
-def normalize(value: str) -> str:
-    import unicodedata
-
-    value = unicodedata.normalize("NFKD", value.lower())
-    return "".join(char for char in value if not unicodedata.combining(char))
-
-
-try:
-    import stopwordsiso
-
-    STOPWORDS = {normalize(word) for word in stopwordsiso.stopwords("es")}
-except ImportError:
-    STOPWORDS = {normalize(word) for word in STOPWORDS}
-# Negation and degree words change meaning, so keep them even if a library lists them.
-    STOPWORDS.difference_update({"no", "nunca", "jamas", "tampoco", "mas", "muy", "si", "hoy", "ayer", "mañana", "manana", "anoche", "ahora", "antes", "despues", "después", "semana", "mes", "año", "ano", "dia", "día", "lunes", "martes", "miercoles", "miércoles", "jueves", "viernes", "sabado", "sábado", "domingo", "pasado", "pasada", "proximo", "próximo", "hacer", "decir", "hablar", "contar", "mencionar", "comentar", "anunciar", "opinar", "pensar", "jugar", "recomendar", "pasar"})
-STOPWORDS.update({"eh", "mmm", "osea", "aja", "ajam", "este", "digamos"})
-
 
 def tokenize(value: str) -> list[str]:
-    return [word for word in re.findall(r"[a-z0-9ñ]{2,}", normalize(value)) if word not in STOPWORDS]
+    """Términos de contenido para estadísticas del corpus (sin palabras vacías)."""
+    return content_tokens(value)
+
+
+def review_candidate_id(stream_id: str, kind: str, row: dict, mention: dict | None = None) -> str:
+    """Stable, source-scoped key for a human review annotation."""
+    start = (mention or row).get("start_sec", 0)
+    if kind == "entity":
+        identity = row.get("id", "")
+    elif kind == "relation":
+        identity = "|".join(str(row.get(key, "")) for key in ("predicate", "object_id", "object"))
+    else:
+        identity = "|".join(str(row.get(key, "")) for key in ("polarity", "target_id", "target"))
+    return f"{stream_id}::{kind}::{float(start):.2f}::{identity}"
 
 
 def text_analysis(value: str) -> dict:
-    tokens = re.findall(r"[a-z0-9ñ]{2,}", normalize(value))
-    useful = [word for word in tokens if word not in STOPWORDS]
+    raw_tokens = [word.casefold() for word in TOKEN_RE.findall(value)]
+    terms = search_tokens(value)
+    try:
+        from src.nlp.retrieval import _load_query_nlp
+        nlp = _load_query_nlp()
+        terms = search_terms(value, nlp(value) if nlp else None)
+    except Exception:
+        pass
+    # These are the tokens actually filtered from the lexical retrieval view.
+    # Negation, temporal expressions and action words remain searchable.
+    removed = [word for word in raw_tokens if normalize(word) in SEARCH_STOPWORDS_NORMALIZED or (len(word) == 1 and not word.isdigit())]
+    content_terms = content_tokens(value)
     return {
         "original": value,
         "normalized": normalize(value),
-        "removed": [word for word in tokens if word in STOPWORDS],
-        "terms": useful,
-        "removed_count": sum(word in STOPWORDS for word in tokens),
+        "removed": removed,
+        "terms": terms,
+        "content_terms": content_terms,
+        "preserved": [word for word in raw_tokens if word in {"no", "nunca", "jamás", "jamas", "hoy", "ayer", "mañana"}],
+        "removed_count": len(removed),
+        "dates": extract_dates(value),
     }
 
 
@@ -96,6 +110,14 @@ def load_transmissions() -> list[dict]:
                         segments.append(row)
                 except json.JSONDecodeError:
                     continue
+        content_terms: list[str] = []
+        total_words = 0
+        dates_found: list[str] = []
+        for row in segments:
+            text = str(row.get("text", ""))
+            total_words += len(TOKEN_RE.findall(text))
+            content_terms.extend(tokenize(text))
+            dates_found.extend(extract_dates(text))
         items.append({
             **metadata,
             "stream_id": stream_id,
@@ -103,7 +125,10 @@ def load_transmissions() -> list[dict]:
             "transcript_ready": bool(segments),
             "audio_ready": audio_path.is_file(),
             "audio_size": audio_path.stat().st_size if audio_path.is_file() else 0,
-            "word_count": sum(len(tokenize(str(row.get("text", "")))) for row in segments),
+            "word_count": len(content_terms),
+            "total_word_count": total_words,
+            "unique_word_count": len(set(content_terms)),
+            "dates_found": list(dict.fromkeys(dates_found)),
             "nlp_preview": text_analysis(str(segments[0].get("text", ""))) if segments else None,
             "transcription_model": segments[0].get("transcription_model", "desconocido") if segments else None,
             "transcript_minutes": round(max(0.0, max((float(row.get("end_sec", 0)) for row in segments), default=0)
@@ -122,7 +147,7 @@ def memory_index_is_current(stream_id: str, transcript_path: Path) -> bool:
         return False
     try:
         memory = json.loads(memory_path.read_text(encoding="utf-8"))
-        return memory.get("search_index_version") == 3
+        return memory.get("search_index_version") == SEARCH_INDEX_VERSION
     except (OSError, json.JSONDecodeError):
         return False
 
@@ -131,40 +156,22 @@ def make_chunks(segments: list[dict], meta: dict) -> list[dict]:
     return make_memory_chunks(segments, meta)
 
 
-def rank_chunks(question: str, chunks: list[dict]) -> list[dict]:
-    query = tokenize(question)
-    if not query or not chunks:
-        return []
-    docs = [tokenize(f"{item['text']} {item['title']} {item['channel_name']} {item['date']}") for item in chunks]
-    doc_freq = Counter(word for doc in docs for word in set(doc))
-    avg_len = sum(map(len, docs)) / max(len(docs), 1)
-    scores = []
-    for item, doc in zip(chunks, docs):
-        counts = Counter(doc)
-        score = 0.0
-        for word in set(query):
-            tf = counts[word]
-            if not tf:
-                continue
-            idf = math.log(1 + (len(docs) - doc_freq[word] + 0.5) / (doc_freq[word] + 0.5))
-            score += idf * (tf * 2.2) / (tf + 1.2 * (0.25 + 0.75 * len(doc) / max(avg_len, 1)))
-        if score:
-            result = dict(item)
-            result["score"] = round(score, 3)
-            scores.append(result)
-    return sorted(scores, key=lambda item: item["score"], reverse=True)
-
-
 def corpus_stats(items: list[dict]) -> dict:
     all_segments = [segment for item in items for segment in item["_segments"]]
     words = Counter()
     for row in all_segments:
         words.update(tokenize(str(row.get("text", ""))))
+    total_words = sum(
+        len(TOKEN_RE.findall(str(row.get("text", "")))) for row in all_segments
+    )
     return {
         "transmissions": len(items),
         "segments": len(all_segments),
         "minutes": round(sum(item["transcript_minutes"] for item in items), 1),
         "channels": len({item.get("channel_name") for item in items if item.get("channel_name")}),
+        "total_words": total_words,
+        "content_words": sum(words.values()),
+        "unique_content_words": len(words),
         "topics": [{"word": word, "count": count} for word, count in words.most_common(12)],
     }
 
@@ -176,32 +183,24 @@ def read_fresh_memory(item: dict) -> dict | None:
         return None
     try:
         memory = json.loads(path.read_text(encoding="utf-8"))
-        return memory if memory.get("search_index_version") == 3 else None
+        return memory if memory.get("search_index_version") == SEARCH_INDEX_VERSION else None
     except (OSError, json.JSONDecodeError):
         return None
 
 
 def is_opinion_question(question: str) -> bool:
     folded = normalize(question)
-    return any(term in folded for term in ("que opina", "que piensa", "que penso", "que le parece", "le gusta", "opinion"))
+    return any(term in folded for term in
+               ("que opina", "que piensa", "que penso", "que le parece", "le gusta", "le disgusta",
+                "opinion", "que dijo sobre", "que comento", "recomienda", "le recomienda"))
 
 
 def is_topic_question(question: str) -> bool:
     folded = normalize(question)
-    return any(term in folded for term in ("de que hablo mas", "de que se hablo mas", "que tema", "temas principales", "que se hablo", "tema principal"))
-
-
-def build_extractive_answer(question: str, ranked: list[dict], topic_terms: list[tuple[str, int]], opinion_question: bool) -> str:
-    if topic_terms and is_topic_question(question):
-        words = ", ".join(f"{word} ({count})" for word, count in topic_terms[:5])
-        return f"Por frecuencia de palabras de contenido, destacan {words}. Es una pista de vocabulario, no una clasificación automática de temas."
-    if not ranked:
-        return "No encontré evidencia suficiente en las transcripciones para responder. Prueba otra formulación o revisa si la fecha/minuto buscado está en el corpus."
-    if opinion_question:
-        return f"La búsqueda encontró esta evidencia sobre la opinión consultada: «{ranked[0]['text']}». Revisa la cita y el audio antes de atribuir una polaridad."
-    if len(ranked) == 1:
-        return f"En el fragmento recuperado, el streamer dice: «{ranked[0]['text']}»."
-    return f"La evidencia más cercana aparece en estos fragmentos: «{ranked[0]['text']}» y «{ranked[1]['text']}»."
+    return any(term in folded for term in
+               ("de que hablo mas", "de que se hablo mas", "que tema", "temas principales",
+                "que se hablo", "tema principal", "de que trato", "de que trata", "temas trata",
+                "de que se trata", "que temas", "de que va"))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -283,9 +282,29 @@ class Handler(BaseHTTPRequestHandler):
             chunks = [chunk for memory in memories for chunk in memory.get("chunks", [])]
             term_counts = Counter()
             for memory in memories:
-                for row in memory.get("interpretation", {}).get("frequent_terms", []):
-                    term_counts[row["term"]] += row["count"]
+                term_counts.update(memory.get("word_counter", {}).get("content_frequencies", {}))
             fragments = [row for memory in memories for row in memory.get("interpretation", {}).get("key_fragments", [])]
+            review_annotations = {}
+            for item in items:
+                review_path = REVIEWS / f"{item['stream_id']}.json"
+                try:
+                    review_file = json.loads(review_path.read_text(encoding="utf-8"))
+                    review_annotations.update(review_file.get("annotations", {}))
+                except (OSError, json.JSONDecodeError):
+                    continue
+            total_content = sum(memory.get("word_counter", {}).get("content_words", 0) for memory in memories)
+            unique_content = len(term_counts)
+            word_counter = {
+                "total_words": sum(memory.get("word_counter", {}).get("total_words", 0) for memory in memories),
+                "content_words": total_content,
+                "unique_content_words": unique_content,
+                "lexical_diversity": round(unique_content / total_content, 3) if total_content else 0.0,
+                "stopwords_removed": sum(memory.get("word_counter", {}).get("stopwords_removed", 0) for memory in memories),
+                "fillers_removed": sum(memory.get("word_counter", {}).get("fillers_removed", 0) for memory in memories),
+                "content_excluded": sum(memory.get("word_counter", {}).get("content_excluded", 0) for memory in memories),
+                "top_content_terms": [{"term": term, "count": count} for term, count in term_counts.most_common(20)],
+                "dates": sorted({value for memory in memories for value in memory.get("word_counter", {}).get("dates", [])}),
+            }
             merged = {
                 "schema_version": 1,
                 "stream": {**first.get("stream", {}), "stream_id": "", "title": f"{len(memories)} transmisiones"},
@@ -293,7 +312,8 @@ class Handler(BaseHTTPRequestHandler):
                 "streams": [{key: memory.get("stream", {}).get(key) for key in ("stream_id", "channel_name", "title", "date")} for memory in memories],
                 "processing": first.get("processing", {}), "chunks": chunks,
                 "entities": list(entities.values()), "relations": relations, "opinions": opinions,
-                "temporal_references": temporal,
+                "review_annotations": review_annotations,
+                "temporal_references": temporal, "word_counter": word_counter,
                 "interpretation": {"method": "lectura extractiva agrupada por creador", "notice": "Mapa limitado a transmisiones con el mismo ID de creador. Cada evidencia conserva su VOD y timestamp.",
                                    "frequent_terms": [{"term": term, "count": count} for term, count in term_counts.most_common(12)],
                                    "key_fragments": fragments[:12]},
@@ -405,6 +425,50 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, UnicodeDecodeError):
             self._json({"error": "El cuerpo de la solicitud no es JSON válido."}, 400)
             return
+        if path == "/api/reviews":
+            stream_id = str(body.get("stream_id", ""))
+            kind = str(body.get("candidate_type", ""))
+            candidate_id = str(body.get("candidate_id", ""))[:500]
+            status = str(body.get("status", ""))
+            corrected = " ".join(str(body.get("corrected_value", "")).split())[:200]
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", stream_id) or kind not in {"entity", "relation", "opinion"}:
+                self._json({"error": "El tipo de revisión o la transmisión no son válidos."}, 400)
+                return
+            if status not in {"confirmed", "rejected", "corrected"} or (status == "corrected" and not corrected):
+                self._json({"error": "Elige confirmar, descartar o escribe una corrección."}, 400)
+                return
+            memory_path = MEMORY / f"{stream_id}.json"
+            try:
+                memory = json.loads(memory_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                self._json({"error": "Primero construye la memoria de esta transmisión."}, 404)
+                return
+            valid_ids = set()
+            if kind == "entity":
+                for entity in memory.get("entities", []):
+                    for mention in entity.get("mentions", []):
+                        valid_ids.add(review_candidate_id(stream_id, kind, entity, mention))
+            else:
+                valid_ids = {review_candidate_id(stream_id, kind, row)
+                             for row in memory.get("relations" if kind == "relation" else "opinions", [])}
+            if candidate_id not in valid_ids:
+                self._json({"error": "No encontré ese candidato en la memoria original."}, 404)
+                return
+            review_path = REVIEWS / f"{stream_id}.json"
+            try:
+                saved = json.loads(review_path.read_text(encoding="utf-8")) if review_path.is_file() else {"schema_version": 1, "annotations": {}}
+            except (OSError, json.JSONDecodeError):
+                saved = {"schema_version": 1, "annotations": {}}
+            saved.setdefault("annotations", {})[candidate_id] = {
+                "candidate_type": kind, "status": status, "corrected_value": corrected if status == "corrected" else "",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            review_path.parent.mkdir(parents=True, exist_ok=True)
+            temp_path = review_path.with_suffix(".json.tmp")
+            temp_path.write_text(json.dumps(saved, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            temp_path.replace(review_path)
+            self._json({"saved": True, "annotation": saved["annotations"][candidate_id]}, 201)
+            return
         if path == "/api/ask":
             stream_id = str(body.get("stream_id", ""))
             question = " ".join(str(body.get("question", "")).split())[:500]
@@ -477,10 +541,13 @@ class Handler(BaseHTTPRequestHandler):
                     ranked = topic_ranked
                 elif not ranked:
                     ranked = sorted(eligible, key=lambda chunk: sum(all_tokens[word] for word in tokenize(chunk["text"])), reverse=True)[:5]
-            evidence_answer = build_extractive_answer(question, ranked, topic_terms, intent_opinion)
+            intent = "opinion" if intent_opinion else "topics" if topic_terms else "retrieval"
+            entity_names = [entity["text"] for entity in detected_entities]
+            evidence_answer = compose_answer(question, ranked, entities=entity_names, intent=intent,
+                                             temporal_context=temporal_context, topic_terms=topic_terms)
             llm_answer, llm_method = generate_answer(question, ranked[:5]) if body.get("use_llm") else (None, "")
             answer = llm_answer or evidence_answer
-            method = llm_method if llm_answer else f"{retrieval_method} · respuesta basada en evidencia literal"
+            method = llm_method if llm_answer else f"{retrieval_method} · respuesta redactada desde la evidencia"
             if llm_method and not llm_answer:
                 method += f" · {llm_method}"
             if temporal_context:
@@ -504,7 +571,7 @@ class Handler(BaseHTTPRequestHandler):
                 "method": method,
                 "query_entities": detected_entities,
                 "temporal_filter": temporal_context,
-                "intent": "opinion" if intent_opinion else "topics" if topic_terms else "retrieval",
+                "intent": intent,
             })
             return
         if path == "/api/evaluation/label":
@@ -678,6 +745,10 @@ class Handler(BaseHTTPRequestHandler):
         if memory_path.is_file():
             memory_path.unlink()
             deleted.append(memory_path.name)
+        review_path = REVIEWS / f"{stream_id}.json"
+        if review_path.is_file():
+            review_path.unlink()
+            deleted.append(review_path.name)
         self._json({"deleted": deleted, "stream_id": stream_id})
 
     @staticmethod

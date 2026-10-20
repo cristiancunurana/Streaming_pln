@@ -1,0 +1,95 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Resumen}{4}{section.1}%
+\contentsline {section}{\numberline {2}Introducción}{4}{section.2}%
+\contentsline {section}{\numberline {3}Planteamiento del Problema}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Problema general}{6}{subsection.3.1}%
+\contentsline {section}{\numberline {4}Objetivos}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Objetivo general}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Objetivos específicos}{6}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Justificación e Impacto}{6}{section.5}%
+\contentsline {section}{\numberline {6}Marco Conceptual}{7}{section.6}%
+\contentsline {section}{\numberline {7}Fundamentos Teóricos y Estado del Arte}{7}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Niveles de análisis del lenguaje natural}{7}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Reconocimiento automático del habla}{8}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Normalización, tokenización y morfología}{9}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Análisis sintáctico y reconocimiento de entidades}{9}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Análisis de sentimiento y extracción de opiniones}{10}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Recuperación de información: del modelo booleano a BM25}{10}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}Representaciones vectoriales y similitud semántica}{11}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.8}Modelos de lenguaje y generación aumentada por recuperación}{11}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}Memoria semántica y grafos de conocimiento}{11}{subsection.7.9}%
+\contentsline {subsection}{\numberline {7.10}Métricas de evaluación}{12}{subsection.7.10}%
+\contentsline {subsection}{\numberline {7.11}Trabajos relacionados}{12}{subsection.7.11}%
+\contentsline {section}{\numberline {8}Propuesta del Sistema y Esquema General}{12}{section.8}%
+\contentsline {section}{\numberline {9}Arquitectura del Prototipo Implementado}{15}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Flujo de ingesta y reconocimiento de voz}{15}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Corpus utilizado}{15}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Preprocesamiento y Técnicas de PLN Aplicadas}{16}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Normalización y protección de fechas}{16}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Separación de \emph {stopwords} por propósito}{16}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Segmentación en fragmentos (\emph {chunking})}{17}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Reconocimiento de entidades nombradas (NER)}{17}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Opiniones, relaciones y referencias temporales}{17}{subsection.10.5}%
+\contentsline {subsection}{\numberline {10.6}Contador de palabras y riqueza léxica}{17}{subsection.10.6}%
+\contentsline {section}{\numberline {11}Memoria Semántica y Representación Vectorial}{17}{section.11}%
+\contentsline {section}{\numberline {12}Diseño de la Representación y del Esquema de Memoria}{18}{section.12}%
+\contentsline {section}{\numberline {13}Análisis de Riqueza Léxica y Temas Dominantes}{19}{section.13}%
+\contentsline {section}{\numberline {14}Motor de Consulta y Recuperación Híbrida}{20}{section.14}%
+\contentsline {subsection}{\numberline {14.1}BM25}{20}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.2}Ranking híbrido y filtro temporal}{20}{subsection.14.2}%
+\contentsline {section}{\numberline {15}Generación de Respuestas con Cita Verificable}{20}{section.15}%
+\contentsline {subsection}{\numberline {15.1}Generación RAG opcional (LLM local)}{21}{subsection.15.1}%
+\contentsline {section}{\numberline {16}Interfaz Web}{21}{section.16}%
+\contentsline {section}{\numberline {17}Diseño de la Interfaz y Experiencia de Usuario}{22}{section.17}%
+\contentsline {section}{\numberline {18}Metodología de Desarrollo}{23}{section.18}%
+\contentsline {section}{\numberline {19}Ingeniería del Software, Arquitectura y Despliegue}{23}{section.19}%
+\contentsline {subsection}{\numberline {19.1}Organización modular y separación de responsabilidades}{23}{subsection.19.1}%
+\contentsline {subsection}{\numberline {19.2}Elección deliberada de dependencias mínimas}{24}{subsection.19.2}%
+\contentsline {subsection}{\numberline {19.3}Ejecución local y eficiencia en CPU}{24}{subsection.19.3}%
+\contentsline {subsection}{\numberline {19.4}Reproducibilidad y trazabilidad}{24}{subsection.19.4}%
+\contentsline {subsection}{\numberline {19.5}Seguridad, privacidad y despliegue}{24}{subsection.19.5}%
+\contentsline {section}{\numberline {20}Resultados con el Corpus}{25}{section.20}%
+\contentsline {section}{\numberline {21}Casos de Estudio y Ejemplos de Consulta}{25}{section.21}%
+\contentsline {subsection}{\numberline {21.1}Consulta sobre una persona}{25}{subsection.21.1}%
+\contentsline {subsection}{\numberline {21.2}Consulta de opinión}{26}{subsection.21.2}%
+\contentsline {subsection}{\numberline {21.3}Consulta temporal}{26}{subsection.21.3}%
+\contentsline {subsection}{\numberline {21.4}Consulta sobre temas recurrentes}{26}{subsection.21.4}%
+\contentsline {subsection}{\numberline {21.5}Consulta entre transmisiones}{26}{subsection.21.5}%
+\contentsline {subsection}{\numberline {21.6}Consulta sin evidencia suficiente}{27}{subsection.21.6}%
+\contentsline {section}{\numberline {22}Calidad de Datos, Anotación y Sesgos}{27}{section.22}%
+\contentsline {section}{\numberline {23}Evaluación}{27}{section.23}%
+\contentsline {subsection}{\numberline {23.1}Evaluación del reconocimiento de voz}{28}{subsection.23.1}%
+\contentsline {subsection}{\numberline {23.2}Evaluación de la recuperación}{28}{subsection.23.2}%
+\contentsline {subsection}{\numberline {23.3}Revisión cualitativa}{28}{subsection.23.3}%
+\contentsline {section}{\numberline {24}Análisis Comparativo con Alternativas Existentes}{28}{section.24}%
+\contentsline {section}{\numberline {25}Preguntas de Investigación y Validación}{29}{section.25}%
+\contentsline {section}{\numberline {26}Métricas de Evaluación en Detalle}{30}{section.26}%
+\contentsline {section}{\numberline {27}Consideraciones sobre la Calidad de la Respuesta}{31}{section.27}%
+\contentsline {section}{\numberline {28}Discusión y Limitaciones}{31}{section.28}%
+\contentsline {section}{\numberline {29}Síntesis de Hallazgos y Contribuciones}{32}{section.29}%
+\contentsline {section}{\numberline {30}Amenazas a la Validez del Estudio}{32}{section.30}%
+\contentsline {section}{\numberline {31}Reflexiones sobre la Evaluación con Usuarios}{33}{section.31}%
+\contentsline {section}{\numberline {32}Conclusiones}{34}{section.32}%
+\contentsline {section}{\numberline {33}Impacto Social, Económico y Cultural}{34}{section.33}%
+\contentsline {section}{\numberline {34}Escalabilidad y Costos Computacionales}{35}{section.34}%
+\contentsline {section}{\numberline {35}Aplicaciones Potenciales y Escenarios de Adopción}{35}{section.35}%
+\contentsline {section}{\numberline {36}Multilingüismo y Variedad Dialectal}{36}{section.36}%
+\contentsline {section}{\numberline {37}Recomendaciones para Implementaciones Similares}{37}{section.37}%
+\contentsline {section}{\numberline {38}Diseño de Experimentos Futuros}{37}{section.38}%
+\contentsline {section}{\numberline {39}Trabajo Futuro}{38}{section.39}%
+\contentsline {section}{\numberline {40}Lecciones Aprendidas y Buenas Prácticas}{38}{section.40}%
+\contentsline {section}{\numberline {41}Hoja de Ruta y Cronograma de Evolución}{39}{section.41}%
+\contentsline {section}{\numberline {42}Uso Responsable de Modelos de Lenguaje}{39}{section.42}%
+\contentsline {section}{\numberline {43}Perspectivas sobre las Plataformas de Streaming}{40}{section.43}%
+\contentsline {section}{\numberline {44}Valor Pedagógico y Académico del Proyecto}{40}{section.44}%
+\contentsline {section}{\numberline {45}Consideraciones Éticas y Privacidad}{41}{section.45}%
+\contentsline {section}{\numberline {46}Síntesis Final y Reflexión}{41}{section.46}%
+\contentsline {section}{\numberline {47}Bibliografía}{42}{section.47}%
+\contentsline {section}{\numberline {Anexo A}Enlaces y Características de los Videos}{42}{appendix.Alph1}%
+\contentsline {section}{\numberline {Anexo B}Glosario de Términos}{43}{appendix.Alph2}%
+\contentsline {section}{\numberline {Anexo C}Guía de Reproducción y Uso}{43}{appendix.Alph3}%
+\contentsline {section}{\numberline {Anexo D}Preguntas Frecuentes}{44}{appendix.Alph4}%
+\contentsline {section}{\numberline {Anexo E}Correspondencia entre Objetivos y Resultados}{45}{appendix.Alph5}%
+\contentsline {section}{\numberline {Anexo F}Cronología del Desarrollo}{45}{appendix.Alph6}%
+\contentsline {section}{\numberline {Anexo G}Códigos QR de Recursos}{46}{appendix.Alph7}%
+\contentsline {section}{\numberline {Anexo H}Trazabilidad y Estructura de Salida}{46}{appendix.Alph8}%

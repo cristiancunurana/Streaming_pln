@@ -1,0 +1,319 @@
+\documentclass[12pt,a4paper]{article}
+
+% =========================================================
+% PROYECTO DE TESIS: FORMATO DE LA UNIVERSIDAD
+% =========================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[a4paper,margin=2.5cm,top=2.4cm,bottom=2.4cm]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.18}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{1.5em}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\setlist{leftmargin=1.5em,itemsep=2pt,topsep=3pt,parsep=0pt}
+\usepackage{xcolor}
+\definecolor{azulprin}{HTML}{1F3A5F}
+\definecolor{azulpetr}{HTML}{176B87}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries\color{azulprin}}{\thesection.}{0.55em}{}
+\titlespacing*{\section}{0pt}{13pt}{6pt}
+\titleformat{\subsection}{\normalsize\bfseries\color{azulpetr}}{\thesubsection}{0.55em}{}
+\usepackage[round,authoryear]{natbib}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulpetr,
+  citecolor=azulprin,
+  urlcolor=azulpetr,
+  pdfauthor={Cristian Junior Cunurana Calderon},
+  pdftitle={Efecto de una arquitectura DevOps en la eficiencia del despliegue web}
+}
+\urlstyle{same}
+
+\begin{document}
+
+% =========================================================
+% PORTADA: se conserva la composición del archivo original
+% =========================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{center}
+\setstretch{1.35}
+{\fontsize{16}{22}\selectfont\textbf{UNIVERSIDAD NACIONAL DEL ALTIPLANO - PUNO}}\\[0.3cm]
+{\fontsize{14}{20}\selectfont\textbf{FACULTAD DE INGENIERÍA MECÁNICA ELÉCTRICA, ELECTRÓNICA Y SISTEMAS}}\\[0.2cm]
+{\fontsize{13}{20}\selectfont\textbf{ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMAS}}\\[0.8cm]
+\IfFileExists{Logo_UNAP.png}{\includegraphics[width=4.2cm]{Logo_UNAP.png}}{%
+  \IfFileExists{logo_UNAP.png}{\includegraphics[width=4.2cm]{logo_UNAP.png}}{\vspace{3.5cm}}}
+\vspace{1.3cm}
+
+{\fontsize{12}{19}\selectfont\textbf{EFECTO DE UNA ARQUITECTURA DEVOPS CON GITLAB CI/CD, DOCKER Y NGINX EN LA EFICIENCIA DEL DESPLIEGUE WEB EN LABORATORIO, 2026}}\\[1.0cm]
+{\fontsize{12}{18}\selectfont\textbf{Presentado por:}}\\[0.15cm]
+{\fontsize{12}{18}\selectfont Cunurana Calderon, Cristian Junior}\\[0.6cm]
+{\fontsize{12}{18}\selectfont\textbf{Área de investigación:}}\\[0.1cm]
+{\fontsize{12}{18}\selectfont Ingeniería de Software}\\[0.4cm]
+{\fontsize{12}{18}\selectfont\textbf{Línea de investigación:}}\\[0.1cm]
+{\fontsize{12}{18}\selectfont Ingeniería de Software y DevOps}\\[0.4cm]
+{\fontsize{12}{18}\selectfont\textbf{Tema:}}\\[0.1cm]
+{\fontsize{12}{18}\selectfont Automatización del despliegue de sistemas web mediante integración continua, contenerización y publicación de servicios}
+\vfill
+{\fontsize{13}{18}\selectfont\textbf{PUNO - PERÚ}}\\[0.15cm]
+{\fontsize{13}{18}\selectfont\textbf{2026}}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =========================================================
+% I. TÍTULO
+% =========================================================
+\section{Título del proyecto de tesis}
+
+\begin{center}
+\textbf{Efecto de una arquitectura DevOps con GitLab CI/CD, Docker y Nginx en la eficiencia del despliegue web en laboratorio, 2026}
+\end{center}
+
+El título expresa la intervención tecnológica (arquitectura DevOps), el resultado que se medirá (eficiencia del despliegue), el objeto de aplicación (sistemas web), el ámbito controlado (laboratorio) y el periodo de estudio. El alcance no presupone que la propuesta ya haya demostrado una mejora; esa conclusión dependerá de las mediciones.
+
+% =========================================================
+% II. RESUMEN
+% =========================================================
+\section{Resumen del proyecto de tesis}
+
+El despliegue de una aplicación web requiere integrar el código, preparar el entorno, construir el artefacto ejecutable, verificar su funcionamiento y publicar el servicio. Cuando estas actividades se realizan manualmente, el resultado puede depender de los pasos que recuerda cada operador, lo que dificulta repetir el proceso y comparar su desempeño. El objetivo de esta investigación es determinar el efecto de una arquitectura DevOps basada en GitLab CI/CD, Docker y Nginx sobre la eficiencia del despliegue de sistemas web en un entorno de laboratorio durante 2026. Se plantea un estudio aplicado, cuantitativo y experimental, con comparación pareada entre el procedimiento manual y el automatizado. Se utilizarán los mismos sistemas web, versiones de código y recursos de cómputo en ambas condiciones. El protocolo prevé registrar el tiempo de despliegue, el número de intervenciones manuales, el éxito técnico de cada ejecución y la variación entre repeticiones. La arquitectura automatizada integrará etapas de construcción, pruebas y publicación; Docker estandarizará el entorno de ejecución y Nginx servirá como punto de acceso y proxy inverso. Se aplicará estadística descriptiva y, de acuerdo con la distribución de las diferencias pareadas, la prueba t para muestras relacionadas o la prueba de rangos con signo de Wilcoxon. El avance formulado comprende la delimitación del problema, objetivos, variables, indicadores, diseño experimental y arquitectura propuesta. La ejecución de las pruebas y la obtención de resultados constituyen las actividades pendientes; por ello, no se atribuyen resultados empíricos aún no medidos.
+
+% =========================================================
+% III. PALABRAS CLAVE
+% =========================================================
+\section{Palabras clave}
+
+DevOps; integración continua; despliegue automatizado; Docker; eficiencia del despliegue.
+
+% =========================================================
+% IV. JUSTIFICACIÓN
+% =========================================================
+\section{Justificación del proyecto}
+
+\subsection{Problema y delimitación}
+
+El despliegue de sistemas web comprende tareas de integración del código fuente, instalación o actualización de dependencias, construcción, pruebas, configuración del servicio y verificación de disponibilidad. Si cada tarea se ejecuta de forma manual, puede variar el orden, los parámetros y la intervención requerida. Estas variaciones pueden incrementar el tiempo de publicación y dificultar la repetición del proceso. La literatura sobre DevOps reporta beneficios asociados con automatización y rapidez de entrega, pero también identifica factores organizacionales y técnicos que condicionan sus resultados; por tanto, no basta con adoptar herramientas para afirmar que un proceso mejoró \citep{faustino2022,azad2023}.
+
+La investigación delimita el problema a la comparación, en un laboratorio, de dos métodos de despliegue de sistemas web: un procedimiento manual documentado y un procedimiento automatizado con GitLab CI/CD, Docker y Nginx. El estudio no evaluará la cultura organizacional, la operación de servicios productivos ni la satisfacción de equipos de desarrollo. La unidad de observación será cada ejecución de despliegue del mismo sistema bajo una de las dos condiciones.
+
+La pregunta general es: ¿qué efecto tiene una arquitectura DevOps basada en GitLab CI/CD, Docker y Nginx sobre la eficiencia del despliegue de sistemas web en un entorno de laboratorio durante 2026? Las preguntas específicas examinan la diferencia en tiempo, las intervenciones manuales, la proporción de ejecuciones exitosas y la variabilidad del tiempo entre repeticiones.
+
+\subsection{Relevancia teórica y metodológica}
+
+Los estudios sistemáticos encuentran evidencia de beneficios de DevOps y de integración continua, a la vez que señalan heterogeneidad en los contextos, métricas y diseños empleados \citep{faustino2022,soares2022,amaro2025}. La propuesta aporta una comparación controlada, delimitada a un conjunto explícito de tecnologías y medidas reproducibles. Para evitar una afirmación amplia sobre el rendimiento DevOps, el efecto se interpretará dentro de las condiciones del laboratorio y de las aplicaciones seleccionadas.
+
+La medición automatizada y trazable de procesos de entrega también ha sido recomendada para reducir la dependencia de encuestas o registros manuales \citep{sallin2021}. En coherencia con ello, el estudio utilizará marcas de tiempo de los registros del pipeline y un registro estructurado común para las ejecuciones manuales. Las definiciones operacionales se fijarán antes de recolectar datos.
+
+\subsection{Relevancia práctica}
+
+El prototipo y el procedimiento documentado podrán servir como referencia académica para cursos y proyectos de Ingeniería de Software que necesiten comparar despliegues manuales y automatizados. El principal producto será un flujo reproducible con sus configuraciones, bitácora de ejecuciones y análisis de indicadores. Su posible utilidad práctica será establecer qué tareas se automatizan y qué cambios observados justifican mantener la arquitectura propuesta.
+
+% =========================================================
+% V. ANTECEDENTES
+% =========================================================
+\section{Antecedentes del proyecto}
+
+\subsection{Antecedente local: Juliaca}
+
+En el ámbito local, \citet{mamanilarico2020} desarrolló una propuesta de integración y despliegue continuo para aplicaciones empresariales del centro de datos de la Universidad Peruana Unión, filial Juliaca. El trabajo identificó instalaciones heterogéneas, dependencia del conocimiento de operadores y demoras en la puesta en producción. Implementó un flujo CI/CD con Jenkins, Docker y GitLab y comparó la eficiencia del despliegue antes y después de la intervención mediante una prueba t. Este antecedente demuestra la pertinencia regional del problema y la viabilidad de trabajar con automatización y contenedores. La presente investigación se diferencia al plantear una comparación experimental explícita entre el procedimiento manual y una arquitectura automatizada con GitLab CI/CD y Nginx, bajo ejecuciones repetidas y condiciones controladas.
+
+\subsection{Antecedentes nacionales}
+
+En Lima, \citet{marchan2021} diseñó un flujo automatizado para el control de calidad de aplicaciones web bajo enfoque DevOps. Su implementación integró Jenkins, Docker, Selenium Grid y GitLab para facilitar pruebas y versionamiento. El estudio es pertinente por la integración de herramientas y la automatización de tareas, aunque su objetivo principal fue el control de calidad y su diseño fue descriptivo, no una comparación experimental de eficiencia de despliegue.
+
+\citet{inqui2025} evaluó una metodología DevOps en el proceso de despliegue de software de una universidad pública. El estudio aplicó mediciones pretest y postest, verificó normalidad y empleó Wilcoxon; reportó cambios en tiempo de entrega, recuperación y fallas de despliegue. Su experiencia respalda el uso de mediciones antes y después de una intervención, y también muestra la necesidad de escoger el estadígrafo después de revisar los supuestos.
+
+Más recientemente, \citet{mamanihuayta2025} planteó la optimización del despliegue de software en una empresa peruana mediante prácticas DevOps y un pipeline que combina Jenkins, Docker y Kubernetes. Definió como indicadores el tiempo promedio de despliegue, la frecuencia de fallas y la satisfacción del equipo. Este trabajo coincide en la medición del proceso de entrega, pero contempla contexto organizacional y herramientas diferentes; el presente proyecto limita sus conclusiones a un experimento reproducible de laboratorio.
+
+\subsection{Antecedentes internacionales}
+
+\citet{faustino2022} realizaron una revisión sistemática de los beneficios de DevOps y encontraron que los más reportados se relacionan con la entrega más rápida, la colaboración y la automatización. Los autores advierten que beneficios como la reducción de cambios fallidos aparecen con menor frecuencia, lo que respalda medir más de un indicador y no asumir que la automatización mejora todos los resultados.
+
+\citet{azad2023} revisaron 38 estudios primarios e identificaron cerca de cien factores críticos de éxito, agrupados en dimensiones técnicas, organizacionales y socioculturales. Este resultado orienta el alcance del presente experimento: se controlarán aspectos técnicos del despliegue, pero no se extrapolarán hallazgos a equipos u organizaciones.
+
+Sobre integración continua, \citet{soares2022} sintetizaron evidencia de 101 estudios empíricos. Reportan efectos en actividades de desarrollo, procesos, aseguramiento de calidad, patrones de integración, defectos y construcción, junto con desafíos técnicos y de proceso. \citet{amaro2025} mapearon las capacidades DevOps en relación con los procesos del ciclo de vida del software y destacan que su evaluación requiere conectar las prácticas con resultados e indicadores definidos.
+
+\citet{leite2019} organizaron conceptos, prácticas y desafíos de DevOps en una revisión de literatura. Por su parte, \citet{rodriguez2017} mapearon 50 estudios sobre despliegue continuo y señalaron que, aunque la práctica resulta relevante para la industria, la evidencia empírica disponible presentaba limitaciones de rigor y contexto. Estos hallazgos justifican formular un protocolo de laboratorio con condiciones de comparación explícitas.
+
+\citet{chen2018} analizaron barreras de adopción de entrega continua mediante una revisión sistemática y destacan que los desafíos no se resuelven únicamente con herramientas. En cuanto a métricas, \citet{sallin2021} implementaron un prototipo para medir automáticamente los indicadores de entrega de software y evaluaron su utilidad en un equipo industrial. Su estudio sustenta el uso de datos de herramientas, aunque las métricas del presente proyecto son más acotadas y se recogerán en ambiente controlado.
+
+Los trabajos de \citet{forsgren2018} y \citet{farley2010} proporcionan fundamentos sobre desempeño de entrega y automatización de compilación, prueba y despliegue. \citet{bernstein2014} describe los contenedores como una forma de empaquetar y ejecutar aplicaciones en entornos consistentes. En conjunto, la literatura respalda la intervención propuesta, pero deja espacio para comparar directamente, con medidas operacionales y repeticiones, el despliegue manual frente al flujo automatizado específico de este proyecto.
+
+% =========================================================
+% VI. HIPÓTESIS
+% =========================================================
+\section{Hipótesis del trabajo}
+
+\subsection{Hipótesis general}
+
+La aplicación de una arquitectura DevOps basada en GitLab CI/CD, Docker y Nginx produce una diferencia estadísticamente significativa en la eficiencia del despliegue de sistemas web, respecto del procedimiento manual, en un entorno de laboratorio durante 2026.
+
+\subsection{Hipótesis específicas}
+
+\begin{enumerate}
+  \item El tiempo de despliegue del procedimiento automatizado difiere del tiempo del procedimiento manual.
+  \item El procedimiento automatizado requiere menos intervenciones manuales que el procedimiento manual.
+  \item La proporción de ejecuciones exitosas del procedimiento automatizado es mayor que la del procedimiento manual.
+  \item La variabilidad de los tiempos de despliegue automatizado es menor que la del procedimiento manual.
+\end{enumerate}
+
+La hipótesis general se contrastará principalmente con la diferencia pareada del tiempo de despliegue. Las hipótesis sobre éxito e intervenciones se analizarán como resultados complementarios. Un resultado no significativo no será interpretado como prueba de equivalencia entre métodos.
+
+% =========================================================
+% VII. OBJETIVOS
+% =========================================================
+\section{Objetivos}
+
+\subsection{Objetivo general}
+
+Determinar el efecto de una arquitectura DevOps basada en GitLab CI/CD, Docker y Nginx sobre la eficiencia del despliegue de sistemas web en un entorno de laboratorio durante 2026.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+  \item Comparar el tiempo de despliegue de sistemas web mediante un procedimiento manual y uno automatizado con GitLab CI/CD, Docker y Nginx.
+  \item Comparar el número de intervenciones manuales requeridas por cada método.
+  \item Comparar la proporción de ejecuciones exitosas obtenidas mediante ambos métodos.
+  \item Evaluar la variabilidad de los tiempos de despliegue en ejecuciones repetidas de ambos métodos.
+  \item Diseñar y documentar un procedimiento experimental reproducible para ejecutar y medir los dos métodos de despliegue.
+\end{enumerate}
+
+% =========================================================
+% VIII. METODOLOGÍA
+% =========================================================
+\section{Metodología de investigación}
+
+\subsection{Enfoque, tipo y nivel}
+
+La investigación tendrá enfoque cuantitativo porque las variables se medirán con indicadores numéricos. Será aplicada, pues implementará una solución tecnológica para un problema de despliegue. Su alcance será explicativo en el sentido acotado de estimar el efecto del método de despliegue bajo condiciones controladas, sin atribuir causalidad fuera de ese contexto.
+
+\subsection{Diseño experimental}
+
+Se empleará un diseño experimental comparativo de medidas relacionadas. Cada unidad de análisis, definida como una ejecución de despliegue de una aplicación web y versión determinadas, será evaluada bajo dos condiciones: (A) procedimiento manual documentado y (B) procedimiento automatizado mediante GitLab CI/CD, Docker y Nginx. La comparación pareada reduce la variación debida a diferencias entre aplicaciones, siempre que se mantengan iguales el código, los datos de prueba, el hardware y las condiciones de red.
+
+Se seleccionarán sistemas web de prueba que puedan desplegarse en el entorno disponible y cuenten con una verificación funcional automatizable. Antes de la medición principal se realizará una prueba piloto técnica para comprobar el protocolo, definir límites de tiempo y estimar la variabilidad. Las ejecuciones piloto se identificarán por separado y no se mezclarán con la muestra final. El tamaño definitivo se establecerá antes de la medición principal con un cálculo de potencia para datos pareados (nivel de significancia de 0.05 y potencia objetivo de 0.80), usando una diferencia mínima relevante acordada y la desviación de las diferencias estimada en el piloto. Se registrará el cálculo y el número final de pares antes de iniciar la comparación.
+
+\subsection{Variables e indicadores}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Operacionalización de variables}
+\label{tab:variables}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{3.2cm} X}
+\toprule
+Variable & Dimensión & Indicador & Medición \\
+\midrule
+Método de despliegue (independiente) & Tipo de procedimiento & Modalidad utilizada & Manual / automatizado con GitLab CI/CD, Docker y Nginx \\
+Eficiencia (dependiente) & Tiempo & Duración de despliegue & Segundos desde el inicio definido del procedimiento hasta verificación HTTP exitosa \\
+Eficiencia (dependiente) & Intervención & Acciones manuales no previstas & Conteo de intervenciones por ejecución \\
+Eficiencia (dependiente) & Éxito & Resultado técnico & Ejecución exitosa si el servicio responde a la prueba de salud y satisface el criterio funcional; sí/no \\
+Eficiencia (dependiente) & Reproducibilidad & Variación temporal & Desviación estándar y coeficiente de variación del tiempo por método \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+El tiempo comenzará en el mismo hito para ambos procedimientos: la orden de iniciar el despliegue sobre una versión de código ya preparada. Finalizará cuando el servicio responda correctamente a una solicitud HTTP de salud y supere la comprobación funcional definida. El tiempo de preparación del repositorio y el tiempo de transcripción de instrucciones no formarán parte de esa medida. Una intervención manual será una acción fuera de los pasos previamente documentados que sea necesaria para continuar, corregir o repetir el despliegue.
+
+\subsection{Población, muestra y unidad de análisis}
+
+La población conceptual estará constituida por las ejecuciones posibles de despliegue de los sistemas web de prueba seleccionados bajo los dos métodos. La muestra será intencional y experimental: pares de ejecuciones comparables de las mismas aplicaciones y versiones. No se inferirá una muestra de empresas ni de todos los sistemas web. La unidad de análisis será el par de ejecuciones manual/automatizada correspondiente a una misma aplicación, versión y configuración de laboratorio.
+
+\subsection{Técnicas, instrumentos y fuentes de datos}
+
+Se empleará observación experimental con registro automático cuando sea posible. Las fuentes serán los registros de pipeline de GitLab, la salida de Docker, los registros del servicio Nginx, marcas de tiempo y resultados de solicitudes HTTP. Una ficha de observación estructurada registrará aplicación y versión, método, identificador de ejecución, hora inicial y final, resultado de salud, intervenciones, incidencias y observaciones. El instrumento se probará durante el piloto y se congelará antes de la fase principal.
+
+\subsection{Procedimiento}
+
+\begin{enumerate}
+  \item Seleccionar las aplicaciones de prueba y fijar sus versiones, datos y verificaciones funcionales.
+  \item Preparar y documentar el entorno de laboratorio, las dependencias y las condiciones de cómputo.
+  \item Especificar los pasos del procedimiento manual y configurar el pipeline de integración y despliegue automatizado.
+  \item Construir las imágenes Docker y configurar Nginx como servidor web/proxy inverso para el servicio de prueba.
+  \item Ejecutar el piloto, corregir ambigüedades del protocolo y fijar el tamaño de muestra mediante análisis de potencia.
+  \item Realizar las ejecuciones principales en pares; alternar o aleatorizar el orden de los métodos para reducir efectos de orden y registrar cada ejecución, incluidos los fallos.
+  \item Verificar que los recursos estén en el mismo estado inicial antes de cada ejecución y aplicar el mismo criterio de éxito a ambas condiciones.
+  \item Consolidar los registros, revisar datos faltantes o anomalías y conservar una bitácora de exclusiones justificadas.
+  \item Calcular indicadores descriptivos, contrastar las hipótesis y documentar los resultados con sus limitaciones.
+\end{enumerate}
+
+\subsection{Plan de análisis estadístico}
+
+Para el tiempo se presentarán media, mediana, desviación estándar, rango intercuartílico, mínimo y máximo por método, además de la diferencia pareada y su intervalo de confianza del 95\%. Se revisará la distribución de las diferencias (gráficos y prueba de Shapiro--Wilk). Si los supuestos de la prueba paramétrica son razonables, se aplicará la prueba t de muestras relacionadas; de lo contrario, se utilizará Wilcoxon de rangos con signo. Se reportará el tamaño del efecto correspondiente, no solo el valor \textit{p}, con nivel de significancia de 0.05.
+
+El número de intervenciones se resumirá por ejecución y método; las tasas de éxito se presentarán como proporciones con intervalos de confianza y se compararán con una prueba para datos pareados (McNemar si la estructura binaria por pares y el número de discordancias lo permite). La variabilidad se comparará descriptivamente y con intervalos de confianza, interpretando con cautela la precisión de estimaciones basada en repeticiones de laboratorio. El análisis no tratará varias etapas de una misma ejecución como observaciones independientes.
+
+\subsection{Control de sesgos y consideraciones éticas}
+
+Se utilizarán versiones congeladas del código, idénticos datos de prueba, infraestructura y criterio de aceptación. El orden de los métodos se alternará o aleatorizará; se precalentará o reiniciará el entorno de forma consistente y se documentarán cortes de red, fallas de hardware y cambios de configuración. Se conservarán tanto las ejecuciones exitosas como las fallidas para evitar sesgo de selección. El estudio no requiere datos personales ni sistemas productivos. Las credenciales de GitLab, si fueran necesarias, se mantendrán fuera de los registros y del repositorio de resultados.
+
+\subsection{Avance de formulación y estado del trabajo}
+
+Al corte de esta propuesta se cuenta con la delimitación del problema, título, pregunta, objetivos, hipótesis, variables e indicadores; asimismo, se ha definido la arquitectura tecnológica de referencia y el esquema de comparación experimental. El siguiente hito es completar el ambiente reproducible y ejecutar el piloto técnico. Todavía no se han incorporado mediciones principales ni resultados estadísticos; estos se informarán únicamente después de ejecutar el protocolo descrito.
+
+% =========================================================
+% REFERENCIAS
+% =========================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+\begin{thebibliography}{99}
+
+\bibitem[Azad y Hyrynsalmi(2023)]{azad2023}
+Azad, N., \& Hyrynsalmi, S. (2023). DevOps critical success factors: A systematic literature review. \textit{Information and Software Technology, 157}, 107150. \url{https://doi.org/10.1016/j.infsof.2023.107150}
+
+\bibitem[Bernstein(2014)]{bernstein2014}
+Bernstein, D. (2014). Containers and cloud: From LXC to Docker to Kubernetes. \textit{IEEE Cloud Computing, 1}(3), 81--84. \url{https://doi.org/10.1109/MCC.2014.51}
+
+\bibitem[Chen et al.(2018)]{chen2018}
+Chen, L., Ali Babar, M., \& Zhang, H. (2018). Continuous delivery: Overcoming adoption challenges. \textit{Journal of Systems and Software, 128}, 72--86. \url{https://doi.org/10.1016/j.jss.2017.02.013}
+
+\bibitem[Farley y Humble(2010)]{farley2010}
+Farley, D., \& Humble, J. (2010). \textit{Continuous delivery: Reliable software releases through build, test, and deployment automation}. Addison-Wesley.
+
+\bibitem[Faustino et al.(2022)]{faustino2022}
+Faustino, J., Adriano, D., Amaro, R., Pereira, R., \& da Silva, M. M. (2022). DevOps benefits: A systematic literature review. \textit{Software: Practice and Experience, 52}(9), 1905--1926. \url{https://doi.org/10.1002/spe.3096}
+
+\bibitem[Forsgren et al.(2018)]{forsgren2018}
+Forsgren, N., Humble, J., \& Kim, G. (2018). \textit{Accelerate: The science of lean software and DevOps: Building and scaling high performing technology organizations}. IT Revolution Press.
+
+\bibitem[Inquilla Quispe(2025)]{inqui2025}
+Inquilla Quispe, R. C. (2025). \textit{Metodología DevOps y su influencia en el proceso de despliegue de software en una universidad pública} [Tesis doctoral, Universidad Nacional Federico Villarreal]. Repositorio Institucional UNFV. \url{https://hdl.handle.net/20.500.13084/12121}
+
+\bibitem[Leite et al.(2019)]{leite2019}
+Leite, L., Rocha, C., Kon, F., Milojicic, D., \& Meirelles, P. (2019). A survey of DevOps concepts and challenges. \textit{ACM Computing Surveys, 52}(6), Article 127. \url{https://doi.org/10.1145/3359981}
+
+\bibitem[Mamani Huayta(2025)]{mamanihuayta2025}
+Mamani Huayta, N. A. (2025). \textit{Optimización del despliegue de software mediante la implementación de prácticas DevOps} [Tesis de título profesional, Universidad Tecnológica del Perú]. Repositorio Institucional UTP. \url{https://hdl.handle.net/20.500.12867/14094}
+
+\bibitem[Mamani Larico(2020)]{mamanilarico2020}
+Mamani Larico, B. N. (2020). \textit{Implementación de ambientes de integración y despliegue continuo (CI/CD) para aplicaciones empresariales en el centro de datos de la Universidad Peruana Unión filial Juliaca} [Tesis de grado, Universidad Peruana Unión]. Repositorio UPeU. \url{https://hdl.handle.net/20.500.12840/4863}
+
+\bibitem[Marchan Marquina(2021)]{marchan2021}
+Marchan Marquina, E. T. (2021). \textit{Flujo de trabajo para automatizar el control de calidad de aplicaciones web bajo el enfoque DevOps, en la empresa SingLabz Solutions S.A.C., Lima, 2018} [Tesis, Universidad San Pedro]. Repositorio Institucional USP. \url{https://repositorio.usanpedro.edu.pe/items/f4033f9c-88cf-402e-98a4-41f2302c6ea3}
+
+\bibitem[Amaro et al.(2025)]{amaro2025}
+Amaro, R., Pereira, R., \& Mira da Silva, M. (2025). Mapping DevOps capabilities to the software life cycle: A systematic literature review. \textit{Information and Software Technology, 177}, 107583. \url{https://doi.org/10.1016/j.infsof.2024.107583}
+
+\bibitem[Rodríguez et al.(2017)]{rodriguez2017}
+Rodríguez, P., Haghighatkhah, A., Lwakatare, L. E., Teppola, S., Suomalainen, T., Eskeli, J., Karvonen, T., Kuvaja, P., Verner, J. M., \& Oivo, M. (2017). Continuous deployment of software intensive products and services: A systematic mapping study. \textit{Journal of Systems and Software, 123}, 263--291. \url{https://doi.org/10.1016/j.jss.2015.12.015}
+
+\bibitem[Sallin et al.(2021)]{sallin2021}
+Sallin, M., Kropp, M., Anslow, C., Quilty, J. W., \& Meier, A. (2021). Measuring software delivery performance using the four key metrics of DevOps. En P. Gregory, M. Lassenius, X. Wang, \& P. Kruchten (Eds.), \textit{Agile processes in software engineering and extreme programming} (pp. 105--121). Springer. \url{https://doi.org/10.1007/978-3-030-78098-2_7}
+
+\bibitem[Soares et al.(2022)]{soares2022}
+Soares, E., Sizilio, G., Santos, J., da Costa, D. A., \& Kulesza, U. (2022). The effects of continuous integration on software development: A systematic literature review. \textit{Empirical Software Engineering, 27}, Article 78. \url{https://doi.org/10.1007/s10664-021-10114-1}
+
+\end{thebibliography}
+
+\end{document}
